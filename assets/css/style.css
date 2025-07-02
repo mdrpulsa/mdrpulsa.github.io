@@ -1,0 +1,152 @@
+/* ===== VARIABEL & RESET ===== */
+:root {
+  --primary: #4361ee;   /* Warna biru */
+  --secondary: #3a0ca3; /* Warna biru tua */
+  --accent: #4895ef;    /* Warna aksen */
+  --light: #f8f9fa;     /* Warna latar */
+  --dark: #212529;      /* Warna teks */
+  --gray: #6c757d;      /* Warna sekunder */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== TYPOGRAPHY ===== */
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  line-height: 1.6;
+  color: var(--dark);
+  background-color: var(--light);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+h1, h2, h3 {
+  color: var(--primary);
+  margin-bottom: 1rem;
+}
+
+p {
+  color: var(--gray);
+  margin-bottom: 1.5rem;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--secondary);
+  text-decoration: underline;
+}
+
+/* ===== LAYOUT ===== */
+header {
+  text-align: center;
+  padding: 3rem 0;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+.container {
+  width: 100%;
+  padding: 0 15px;
+}
+
+/* ===== PROJECT CARDS ===== */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.project-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.project-image {
+  height: 180px;
+  background-size: cover;
+  background-position: center;
+  background-color: #eee; /* Warna fallback */
+}
+
+.project-content {
+  padding: 1.5rem;
+}
+
+.visit-btn {
+  display: inline-block;
+  background: var(--primary);
+  color: white;
+  padding: 0.6rem 1.2rem;
+  border-radius: 5px;
+  font-weight: 500;
+}
+
+.visit-btn:hover {
+  background: var(--secondary);
+  text-decoration: none;
+}
+
+/* ===== FOOTER ===== */
+footer {
+  text-align: center;
+  padding: 2rem 0;
+  margin-top: 3rem;
+  color: var(--gray);
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+/* ===== UTILITY CLASSES ===== */
+.text-center { text-align: center; }
+.mt-1 { margin-top: 1rem; }
+.mb-2 { margin-bottom: 2rem; }
+
+/* ===== DARK MODE ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --light: #212529;
+    --dark: #f8f9fa;
+  }
+  
+  body {
+    background-color: var(--light);
+    color: var(--dark);
+  }
+  
+  .project-card {
+    background: #2b3035;
+  }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+  
+  header {
+    padding: 2rem 0;
+  }
+  
+  .project-grid {
+    grid-template-columns: 1fr;
+  }
+}
