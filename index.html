@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyek GitHub Pages Saya</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <header>
+        <h1>Selamat Datang</h1>
+        <p>Website portfolio dan proyek saya</p>
+    </header>
+
+    <main>
+        <section class="projects">
+            <h2>Proyek Saya</h2>
+            <div class="project-card">
+                <h3><a href="projects/store/">Toko Online</a></h3>
+                <p>Demo toko dengan katalog produk</p>
+            </div>
+            <div class="project-card">
+                <h3><a href="projects/kasir/">Mesin Kasir</a></h3>
+                <p>Sistem kasir sederhana</p>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>© <span id="year"></span> Dibuat dengan GitHub Pages</p>
+    </footer>
+
+    <script src="assets/js/main.js"></script>
+    <script>
+        // Auto-update year
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
