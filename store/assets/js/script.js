@@ -33,7 +33,7 @@ paymentModal.innerHTML = `
                 <h4>Transfer Bank</h4>
                 <div class="bank-account">
                     <div class="bank-logo">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Bank_Central_Asia.svg/1200px-Bank_Central_Asia.svg.png" alt="BCA">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/5c/Bank_Central_Asia.svg" alt="BCA">
                     </div>
                     <div class="bank-details">
                         <p><strong>BCA</strong></p>
@@ -43,7 +43,7 @@ paymentModal.innerHTML = `
                 </div>
                 <div class="bank-account">
                     <div class="bank-logo">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Logo_Bank_BRI_%28Indonesia%29.svg/1200px-Logo_Bank_BRI_%28Indonesia%29.svg.png" alt="BRI">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2e/BRI_2020.svg" alt="BRI">
                     </div>
                     <div class="bank-details">
                         <p><strong>BRI</strong></p>
