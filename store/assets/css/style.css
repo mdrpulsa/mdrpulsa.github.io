@@ -1,17 +1,20 @@
 :root {
-    --primary-color: #4a6fa5;
-    --secondary-color: #166088;
-    --accent-color: #4fc3f7;
-    --light-color: #f8f9fa;
-    --dark-color: #343a40;
-    --success-color: #28a745;
-    --error-color: #dc3545;
-    --text-color: #212529;
-    --text-light: #6c757d;
-    --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.15);
-    --border-radius: 8px;
-    --transition: all 0.3s ease;
+    --primary-color: #4361ee;      /* Biru elektrik yang lebih hidup */
+    --secondary-color: #3a0ca3;    /* Biru royal yang dalam */
+    --accent-color: #4cc9f0;       /* Cyan segar untuk aksen */
+    --light-color: #f8f9fa;        /* Tetap sama (soft white) */
+    --dark-color: #14213d;         /* Navy gelap yang lebih modern */
+    
+    --success-color: #4ade80;      /* Hijau mint yang segar */
+    --error-color: #f87171;        /* Merah coral yang lembut */
+    
+    --text-color: #1e293b;         /* Soft black untuk teks utama */
+    --text-light: #64748b;         /* Abu-abu modern untuk teks sekunder */
+    
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.1);
+    --border-radius: 12px;         /* Lebih rounded */
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Easing yang lebih smooth */
 }
 
 * {
