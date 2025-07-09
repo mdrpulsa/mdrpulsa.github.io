@@ -1,20 +1,26 @@
 :root {
-    --primary-color: #4361ee;      /* Biru elektrik yang lebih hidup */
-    --secondary-color: #3a0ca3;    /* Biru royal yang dalam */
-    --accent-color: #4cc9f0;       /* Cyan segar untuk aksen */
-    --light-color: #f8f9fa;        /* Tetap sama (soft white) */
-    --dark-color: #14213d;         /* Navy gelap yang lebih modern */
+    /* Base Colors */
+    --primary-color: #2c3e50;      /* Dark blue-gray (primary) */
+    --secondary-color: #3498db;    /* Vibrant blue (secondary) */
+    --accent-color: #e74c3c;       /* Red accent */
     
-    --success-color: #4ade80;      /* Hijau mint yang segar */
-    --error-color: #f87171;        /* Merah coral yang lembut */
+    /* Neutral Colors */
+    --light-color: #ecf0f1;        /* Light gray */
+    --dark-color: #2c3e50;         /* Same as primary (dark blue-gray) */
     
-    --text-color: #1e293b;         /* Soft black untuk teks utama */
-    --text-light: #64748b;         /* Abu-abu modern untuk teks sekunder */
+    /* System Colors */
+    --success-color: #2ecc71;      /* Green (matching palette) */
+    --error-color: #e74c3c;        /* Same as accent (red) */
     
-    --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    --shadow-hover: 0 10px 15px rgba(0, 0, 0, 0.1);
-    --border-radius: 12px;         /* Lebih rounded */
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Easing yang lebih smooth */
+    /* Text Colors */
+    --text-color: #333;            /* Dark gray */
+    --text-light: #7f8c8d;         /* Medium gray */
+    
+    /* Effects */
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 6px 12px rgba(0, 0, 0, 0.15);  /* Added hover shadow */
+    --border-radius: 8px;
+    --transition: all 0.3s ease;
 }
 
 * {
