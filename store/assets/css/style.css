@@ -1,12 +1,12 @@
 :root {
     /* Base Colors */
-    --primary-color: #2c3e50;      /* Dark blue-gray (primary) */
+    --primary-color: #008ca7;      /* Dark blue-gray (primary) */
     --secondary-color: #3498db;    /* Vibrant blue (secondary) */
     --accent-color: #e74c3c;       /* Red accent */
     
     /* Neutral Colors */
     --light-color: #ecf0f1;        /* Light gray */
-    --dark-color: #2c3e50;         /* Same as primary (dark blue-gray) */
+    --dark-color: #008ca7;         /* Same as primary (dark blue-gray) */
     
     /* System Colors */
     --success-color: #2ecc71;      /* Green (matching palette) */
