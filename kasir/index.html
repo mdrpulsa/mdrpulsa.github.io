@@ -25,6 +25,11 @@
     <!-- html2canvas for downloading receipt -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
+    <!-- NEW: jsPDF for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+
     <style>
         :root {
             --primary-color: #008ca7;
@@ -330,12 +335,14 @@
     </div>
 
     <main class="container pb-5">
-        <!-- Daily Report Section -->
+        <!-- UPDATED: Report Section with Date Range -->
         <section id="report-section" class="mb-4">
             <div class="neumorph-card p-3">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0">Laporan Harian</h5>
-                    <input type="date" id="report-date-filter" class="form-control-neumorph" style="width: auto;">
+                <h5 class="fw-bold mb-3">Laporan Keuangan</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
+                    <input type="date" id="report-date-start" class="form-control-neumorph" style="width: auto;">
+                    <span>s/d</span>
+                    <input type="date" id="report-date-end" class="form-control-neumorph" style="width: auto;">
                 </div>
                 <div class="neumorph-card-inset p-3">
                     <div class="row text-center g-2">
@@ -385,6 +392,22 @@
             </div>
         </section>
 
+        <!-- NEW: Export Section -->
+        <section id="export-section" class="mb-4">
+            <div class="neumorph-card p-3">
+                <h5 class="fw-bold mb-3">Export Laporan</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3 gap-2">
+                    <input type="date" id="export-date-start" class="form-control-neumorph" style="width: auto;">
+                    <span>s/d</span>
+                    <input type="date" id="export-date-end" class="form-control-neumorph" style="width: auto;">
+                </div>
+                <div class="d-grid gap-2">
+                    <button id="btn-export-csv" class="btn neumorph-button">Export ke Excel (CSV)</button>
+                    <button id="btn-export-pdf" class="btn neumorph-button">Export ke PDF</button>
+                </div>
+            </div>
+        </section>
+
         <!-- Main Content Tabs -->
         <ul class="nav nav-tabs nav-fill mb-3" id="mainTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -399,7 +422,6 @@
 
         <div class="tab-content" id="mainTabsContent">
             <div class="tab-pane fade show active" id="transactions-pane" role="tabpanel">
-                <!-- NEW: Search Bar -->
                 <div class="mb-3">
                     <input type="text" id="search-transactions" class="form-control-neumorph"
                         placeholder="Cari transaksi...">
@@ -510,7 +532,6 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Kategori*</label>
-                            <!-- UPDATED: Changed to a select dropdown -->
                             <select id="expense-category" class="form-select-neumorph" required></select>
                         </div>
                         <div class="mb-3">
@@ -618,7 +639,6 @@
                     </div>
                     <button id="btn-save-settings" class="btn neumorph-button w-100 p-3 mb-4">Simpan Pengaturan</button>
                     <hr>
-                    <!-- NEW: Category Management Section -->
                     <h6 class="mt-4">Manajemen Kategori Pengeluaran</h6>
                     <div id="category-list" class="mb-3"></div>
                     <div class="input-group">
@@ -671,7 +691,6 @@
                     transactions: [],
                     debts: [],
                     assets: { cash: 0, bank: 0, app: 0, product: 0 },
-                    // NEW: State for categories
                     categories: ['Belanja Stok', 'Transportasi', 'Makan', 'Lainnya'],
                     settings: {
                         shopName: 'Toko Anda'
@@ -679,7 +698,7 @@
                     bsModals: {},
                     activeTransactionId: null
                 };
-                const DB_NAME = 'bukuKeuanganData_v9'; // Version bump for new data structure
+                const DB_NAME = 'bukuKeuanganData_v9';
 
                 // --- DOM ELEMENTS CACHE ---
                 const _elements = {
@@ -693,10 +712,17 @@
                         product: document.getElementById('asset-product')
                     },
                     report: {
-                        dateFilter: document.getElementById('report-date-filter'),
+                        dateStart: document.getElementById('report-date-start'), // UPDATED
+                        dateEnd: document.getElementById('report-date-end'),     // UPDATED
                         omzet: document.getElementById('report-omzet'),
                         profit: document.getElementById('report-profit'),
                         transactions: document.getElementById('report-transactions')
+                    },
+                    export: { // NEW
+                        dateStart: document.getElementById('export-date-start'),
+                        dateEnd: document.getElementById('export-date-end'),
+                        csvBtn: document.getElementById('btn-export-csv'),
+                        pdfBtn: document.getElementById('btn-export-pdf')
                     },
                     lists: {
                         transactions: document.getElementById('transactions-list'),
@@ -707,7 +733,7 @@
                         expense: document.getElementById('btn-add-expense'),
                         transfer: document.getElementById('btn-add-transfer')
                     },
-                    search: { // NEW
+                    search: {
                         transactions: document.getElementById('search-transactions')
                     },
                     forms: {
@@ -733,9 +759,9 @@
                         backupBtn: document.getElementById('btn-backup'),
                         restoreBtn: document.getElementById('btn-restore'),
                         restoreInput: document.getElementById('restore-file-input'),
-                        categoryList: document.getElementById('category-list'), // NEW
-                        newCategoryName: document.getElementById('new-category-name'), // NEW
-                        addCategoryBtn: document.getElementById('btn-add-category') // NEW
+                        categoryList: document.getElementById('category-list'),
+                        newCategoryName: document.getElementById('new-category-name'),
+                        addCategoryBtn: document.getElementById('btn-add-category')
                     },
                     saleFormFields: {
                         id: document.getElementById('sale-id'),
@@ -774,13 +800,11 @@
                 // --- HELPER FUNCTIONS ---
                 const _helpers = {
                     formatCurrency: (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount || 0),
-                    // NEW: Helper to format number input with dots
                     formatNumberInput: (value) => {
                         if (!value) return '';
                         const number = parseInt(value.toString().replace(/[^0-9]/g, ''), 10);
                         return isNaN(number) ? '' : new Intl.NumberFormat('id-ID').format(number);
                     },
-                    // NEW: Helper to parse formatted number back to integer
                     parseFormattedNumber: (value) => {
                         return value ? parseInt(value.toString().replace(/[^0-9]/g, ''), 10) || 0 : 0;
                     },
@@ -790,6 +814,13 @@
                         const month = (now.getMonth() + 1).toString().padStart(2, '0');
                         const day = now.getDate().toString().padStart(2, '0');
                         return `${year}-${month}-${day}`;
+                    },
+                    // NEW: Get the first day of the current month
+                    getFirstDayOfMonth: () => {
+                        const now = new Date();
+                        const year = now.getFullYear();
+                        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                        return `${year}-${month}-01`;
                     },
                     formatDate: (timestamp) => new Date(timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
                     formatTimestamp: (timestamp) => new Date(timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
@@ -911,8 +942,13 @@
                         _elements.settingsFields.assetProduct.value = _helpers.formatNumberInput(_state.assets.product);
                     },
                     report() {
-                        const date = _elements.report.dateFilter.value;
-                        const filteredTransactions = _state.transactions.filter(t => t.date === date);
+                        // UPDATED: Logic for date range
+                        const startDate = _elements.report.dateStart.value;
+                        const endDate = _elements.report.dateEnd.value;
+
+                        if (!startDate || !endDate) return;
+
+                        const filteredTransactions = _state.transactions.filter(t => t.date >= startDate && t.date <= endDate);
 
                         const omzet = filteredTransactions
                             .filter(t => t.type === 'pemasukan' && t.category.includes('Penjualan'))
@@ -1010,7 +1046,6 @@
                         expenseSelectEl.innerHTML = '';
 
                         _state.categories.forEach(cat => {
-                            // Populate settings list
                             const item = document.createElement('div');
                             item.className = 'd-flex justify-content-between align-items-center p-2 mb-1 neumorph-card-inset';
                             item.innerHTML = `
@@ -1019,14 +1054,12 @@
                             `;
                             settingsListEl.appendChild(item);
 
-                            // Populate expense form dropdown
                             const option = document.createElement('option');
                             option.value = cat;
                             option.textContent = cat;
                             expenseSelectEl.appendChild(option);
                         });
 
-                        // Add special option to add new category from expense form
                         const addNewOption = document.createElement('option');
                         addNewOption.value = 'add_new';
                         addNewOption.textContent = '＋ Tambah Kategori Baru...';
@@ -1085,7 +1118,8 @@
                 // --- EVENT HANDLERS ---
                 const _events = {
                     init() {
-                        _elements.report.dateFilter.addEventListener('change', _render.report);
+                        _elements.report.dateStart.addEventListener('change', _render.report);
+                        _elements.report.dateEnd.addEventListener('change', _render.report);
 
                         _elements.actionButtons.sale.addEventListener('click', _handlers.showSaleModal);
                         _elements.actionButtons.expense.addEventListener('click', _handlers.showExpenseModal);
@@ -1122,6 +1156,9 @@
                             }
                         });
 
+                        _elements.export.csvBtn.addEventListener('click', _handlers.exportToCSV);
+                        _elements.export.pdfBtn.addEventListener('click', _handlers.exportToPDF);
+
                         _elements.saleFormFields.paymentMethod.addEventListener('change', (e) => {
                             const method = e.target.value;
                             _elements.saleFormFields.paidAmountWrapper.classList.toggle('d-none', method !== 'sebagian');
@@ -1145,7 +1182,6 @@
 
                         _elements.search.transactions.addEventListener('input', _render.transactions);
 
-                        // Auto-format number inputs
                         const numberInputs = ['sale-price', 'sale-cost', 'sale-paid-amount', 'expense-amount', 'transfer-amount', 'asset-app-setting', 'asset-cash-setting', 'asset-bank-setting', 'asset-product-setting'];
                         numberInputs.forEach(id => {
                             document.getElementById(id).addEventListener('input', (e) => {
@@ -1583,16 +1619,98 @@
                             _render.categories();
                             _elements.expenseFormFields.category.value = trimmedCat;
                         } else {
-                            // Reset to first category if user cancels
                             _elements.expenseFormFields.category.value = _state.categories[0];
                         }
+                    },
+                    exportToCSV() {
+                        const startDate = _elements.export.dateStart.value;
+                        const endDate = _elements.export.dateEnd.value;
+                        if (!startDate || !endDate) {
+                            Swal.fire('Error', 'Silakan pilih rentang tanggal untuk ekspor.', 'error');
+                            return;
+                        }
+
+                        const filtered = _state.transactions.filter(t => t.date >= startDate && t.date <= endDate);
+                        if (filtered.length === 0) {
+                            Swal.fire('Info', 'Tidak ada data transaksi pada rentang tanggal yang dipilih.', 'info');
+                            return;
+                        }
+
+                        let csvContent = "data:text/csv;charset=utf-8,";
+                        const headers = ["Tanggal", "Waktu", "Kategori", "Catatan", "Pemasukan", "Pengeluaran", "Laba"];
+                        csvContent += headers.join(",") + "\r\n";
+
+                        filtered.forEach(t => {
+                            const date = new Date(t.timestamp).toLocaleDateString('id-ID');
+                            const time = new Date(t.timestamp).toLocaleTimeString('id-ID');
+                            const income = t.type === 'pemasukan' ? t.amount : 0;
+                            const expense = t.type === 'pengeluaran' ? t.amount : 0;
+                            const profit = t.profit || 0;
+                            const notes = `"${t.notes || ''}"`;
+
+                            let row = [date, time, t.category, notes, income, expense, profit];
+                            csvContent += row.join(",") + "\r\n";
+                        });
+
+                        const encodedUri = encodeURI(csvContent);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", encodedUri);
+                        link.setAttribute("download", `laporan_${startDate}_sd_${endDate}.csv`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    },
+                    exportToPDF() {
+                        const startDate = _elements.export.dateStart.value;
+                        const endDate = _elements.export.dateEnd.value;
+                        if (!startDate || !endDate) {
+                            Swal.fire('Error', 'Silakan pilih rentang tanggal untuk ekspor.', 'error');
+                            return;
+                        }
+
+                        const filtered = _state.transactions.filter(t => t.date >= startDate && t.date <= endDate);
+                        if (filtered.length === 0) {
+                            Swal.fire('Info', 'Tidak ada data transaksi pada rentang tanggal yang dipilih.', 'info');
+                            return;
+                        }
+
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF();
+
+                        doc.text(`Laporan Keuangan: ${_state.settings.shopName}`, 14, 16);
+                        doc.setFontSize(10);
+                        doc.text(`Periode: ${startDate} s/d ${endDate}`, 14, 22);
+
+                        const tableColumn = ["Tanggal", "Kategori", "Catatan", "Pemasukan", "Pengeluaran", "Laba"];
+                        const tableRows = [];
+
+                        filtered.forEach(t => {
+                            const transactionData = [
+                                new Date(t.timestamp).toLocaleDateString('id-ID'),
+                                t.category,
+                                t.notes || '-',
+                                t.type === 'pemasukan' ? _helpers.formatCurrency(t.amount) : 'Rp 0',
+                                t.type === 'pengeluaran' ? _helpers.formatCurrency(t.amount) : 'Rp 0',
+                                _helpers.formatCurrency(t.profit || 0)
+                            ];
+                            tableRows.push(transactionData);
+                        });
+
+                        doc.autoTable(tableColumn, tableRows, { startY: 30 });
+                        doc.save(`laporan_${startDate}_sd_${endDate}.pdf`);
                     }
                 };
 
                 // --- PUBLIC API ---
                 return {
                     init() {
-                        _elements.report.dateFilter.value = _helpers.getTodayDateString();
+                        // Set default date range to this month
+                        const today = _helpers.getTodayDateString();
+                        const firstDay = _helpers.getFirstDayOfMonth();
+                        _elements.report.dateStart.value = firstDay;
+                        _elements.report.dateEnd.value = today;
+                        _elements.export.dateStart.value = firstDay;
+                        _elements.export.dateEnd.value = today;
 
                         _state.bsModals.sale = new bootstrap.Modal(document.getElementById('saleModal'));
                         _state.bsModals.expense = new bootstrap.Modal(document.getElementById('expenseModal'));
