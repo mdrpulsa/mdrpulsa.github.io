@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Buku Keuangan - Pencatatan Usaha</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- SweetAlert2 JS (digunakan untuk notifikasi) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js"></script>
+
+    <!-- html2canvas for downloading receipt -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #008ca7;
+            --primary-dark: #006b80;
+            --bg-color: #eef5f9;
+            --text-dark: #3b4d61;
+            --text-muted: #9baabf;
+            --white-soft: #f8f9fa;
+            --shadow-light: #ffffff;
+            --shadow-dark: #d1d9e6;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Neumorphism UI Styles */
+        .neumorph-card {
+            background-color: var(--bg-color);
+            border-radius: var(--radius-lg);
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+            border: none;
+        }
+
+        .neumorph-card-inset {
+            background-color: var(--bg-color);
+            border-radius: var(--radius-lg);
+            box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+        }
+
+        .neumorph-button {
+            background: var(--bg-color);
+            border-radius: var(--radius-md);
+            border: none;
+            box-shadow: 6px 6px 12px var(--shadow-dark), -6px -6px 12px var(--shadow-light);
+            transition: all 0.2s ease-in-out;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .neumorph-button:hover {
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            transform: translateY(1px);
+        }
+
+        .neumorph-button:active,
+        .neumorph-button.active {
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            transform: translateY(2px);
+            color: var(--primary-color);
+        }
+
+        .form-control-neumorph,
+        .form-select-neumorph {
+            background-color: var(--bg-color);
+            border: none;
+            border-radius: var(--radius-md);
+            box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+            padding: 0.75rem 1rem;
+            width: 100%;
+        }
+
+        .form-control-neumorph:focus,
+        .form-select-neumorph:focus {
+            background-color: var(--bg-color);
+            box-shadow: inset 2px 2px 4px var(--shadow-dark), inset -2px -2px 4px var(--shadow-light), 0 0 0 2px var(--primary-color);
+        }
+
+        /* Component specific styles */
+        .report-item .amount,
+        .summary-item .amount,
+        .asset-item .amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+            /* Adjusted for smaller screens */
+            word-break: break-all;
+        }
+
+        .asset-item .fw-bold {
+            font-size: 0.85rem;
+        }
+
+        .amount.income {
+            color: #198754;
+        }
+
+        .amount.expense {
+            color: #dc3545;
+        }
+
+        .amount.profit {
+            color: var(--primary-color);
+        }
+
+        .amount.debt {
+            color: #fd7e14;
+        }
+
+        .transaction-amount.pemasukan {
+            color: #198754;
+        }
+
+        .transaction-amount.pengeluaran {
+            color: #dc3545;
+        }
+
+        .transaction-amount.transfer {
+            color: var(--text-dark);
+        }
+
+        .asset-item .icon-wrapper {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .asset-item .icon-wrapper.app {
+            color: #6f42c1;
+        }
+
+        .asset-item .icon-wrapper.cash {
+            color: #198754;
+        }
+
+        .asset-item .icon-wrapper.bank {
+            color: #0d6efd;
+        }
+
+        .asset-item .icon-wrapper.product {
+            color: #fd7e14;
+        }
+
+        /* New icon color */
+
+        .transaction-item,
+        .debt-item {
+            background-color: var(--bg-color);
+            border-radius: var(--radius-md);
+            margin-bottom: 0.75rem;
+            padding: 1rem;
+            box-shadow: 5px 5px 10px var(--shadow-dark), -5px -5px 10px var(--shadow-light);
+            border: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+        }
+
+        .transaction-item:hover,
+        .debt-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .debt-item.lunas {
+            opacity: 0.7;
+            background-color: #e0e5ec;
+        }
+
+        .debt-item.lunas .debt-amount,
+        .debt-item.lunas .customer-name {
+            text-decoration: line-through;
+            color: var(--text-muted);
+        }
+
+        .nav-tabs {
+            border-bottom: none;
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+        }
+
+        .nav-tabs .nav-link.active {
+            color: var(--primary-color);
+            background-color: var(--bg-color);
+            box-shadow: 4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light);
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+        }
+
+        .tab-content {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+        }
+
+        #struk-area {
+            font-family: 'Source Code Pro', monospace;
+            background-color: #fff;
+            padding: 1.5rem;
+            color: #000;
+            border: 1px dashed #888;
+        }
+
+        #struk-area .struk-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        #struk-area .struk-shop-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        #struk-area hr {
+            border-top: 1px dashed #000;
+            opacity: 1;
+            margin: 0.5rem 0;
+        }
+
+        #struk-area .struk-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #struk-area .struk-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        #struk-area .sn-block {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            word-break: break-all;
+        }
+
+        .modal-content {
+            background-color: var(--bg-color);
+            border-radius: var(--radius-lg);
+            border: none;
+            box-shadow: 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light);
+        }
+
+        .modal-header {
+            border-bottom: none;
+        }
+
+        .modal-footer {
+            border-top: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header p-3 mb-4 sticky-top d-flex justify-content-between align-items-center">
+        <h1 class="h4 mb-0 text-center fw-bold flex-grow-1">Buku Keuangan</h1>
+        <button id="btn-settings" class="btn btn-light p-2 rounded-circle lh-1">
+            <i data-lucide="settings"></i>
+        </button>
+    </header>
+
+    <div class="container">
+        <!-- Action Buttons Section -->
+        <section id="action-buttons" class="mb-4">
+            <div class="d-flex justify-content-around gap-2">
+                <button id="btn-add-sale"
+                    class="btn neumorph-button flex-fill d-flex flex-column align-items-center p-2">
+                    <i data-lucide="shopping-cart"></i>
+                    <span class="small mt-1">Penjualan</span>
+                </button>
+                <button id="btn-add-expense"
+                    class="btn neumorph-button flex-fill d-flex flex-column align-items-center p-2">
+                    <i data-lucide="arrow-down-circle"></i>
+                    <span class="small mt-1">Pengeluaran</span>
+                </button>
+                <button id="btn-add-transfer"
+                    class="btn neumorph-button flex-fill d-flex flex-column align-items-center p-2">
+                    <i data-lucide="arrow-right-left"></i>
+                    <span class="small mt-1">Transfer</span>
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <main class="container pb-5">
+        <!-- Daily Report Section -->
+        <section id="report-section" class="mb-4">
+            <div class="neumorph-card p-3">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0">Laporan Harian</h5>
+                    <input type="date" id="report-date-filter" class="form-control-neumorph" style="width: auto;">
+                </div>
+                <div class="neumorph-card-inset p-3">
+                    <div class="row text-center g-2">
+                        <div class="col-4 report-item">
+                            <small class="text-muted d-block">Omzet</small>
+                            <span id="report-omzet" class="amount income">Rp 0</span>
+                        </div>
+                        <div class="col-4 report-item">
+                            <small class="text-muted d-block">Keuntungan</small>
+                            <span id="report-profit" class="amount profit">Rp 0</span>
+                        </div>
+                        <div class="col-4 report-item">
+                            <small class="text-muted d-block">Transaksi</small>
+                            <span id="report-transactions" class="amount text-dark">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Aset Dashboard -->
+        <section id="asset-section" class="mb-4">
+            <div class="neumorph-card p-3">
+                <h5 class="fw-bold mb-3 text-center">Aset Anda</h5>
+                <div class="row text-center g-3">
+                    <div class="col-6 asset-item">
+                        <div class="icon-wrapper neumorph-card-inset app"><i data-lucide="smartphone"></i></div>
+                        <div class="fw-bold">Aplikasi</div>
+                        <span id="asset-app" class="amount">Rp 0</span>
+                    </div>
+                    <div class="col-6 asset-item">
+                        <div class="icon-wrapper neumorph-card-inset cash"><i data-lucide="wallet"></i></div>
+                        <div class="fw-bold">Tunai</div>
+                        <span id="asset-cash" class="amount">Rp 0</span>
+                    </div>
+                    <div class="col-6 asset-item">
+                        <div class="icon-wrapper neumorph-card-inset bank"><i data-lucide="landmark"></i></div>
+                        <div class="fw-bold">Bank</div>
+                        <span id="asset-bank" class="amount">Rp 0</span>
+                    </div>
+                    <div class="col-6 asset-item">
+                        <div class="icon-wrapper neumorph-card-inset product"><i data-lucide="package"></i></div>
+                        <div class="fw-bold">Produk Fisik</div>
+                        <span id="asset-product" class="amount">Rp 0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Content Tabs -->
+        <ul class="nav nav-tabs nav-fill mb-3" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="transactions-tab" data-bs-toggle="tab"
+                    data-bs-target="#transactions-pane" type="button" role="tab">Riwayat Transaksi</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="debts-tab" data-bs-toggle="tab" data-bs-target="#debts-pane" type="button"
+                    role="tab">Daftar Utang</button>
+            </li>
+        </ul>
+
+        <div class="tab-content" id="mainTabsContent">
+            <div class="tab-pane fade show active" id="transactions-pane" role="tabpanel">
+                <!-- NEW: Search Bar -->
+                <div class="mb-3">
+                    <input type="text" id="search-transactions" class="form-control-neumorph"
+                        placeholder="Cari transaksi...">
+                </div>
+                <div id="transactions-list"></div>
+            </div>
+            <div class="tab-pane fade" id="debts-pane" role="tabpanel">
+                <div id="debts-list"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modals -->
+    <div class="modal fade" id="saleModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sale-modal-title">Catat Penjualan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="sale-form">
+                        <input type="hidden" id="sale-id">
+                        <div class="mb-3">
+                            <label class="form-label">Nama Pelanggan*</label>
+                            <input type="text" id="sale-customer" class="form-control-neumorph" value="Pelanggan Umum"
+                                required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nama Produk/Jasa</label>
+                            <input type="text" id="sale-product" class="form-control-neumorph" placeholder="Opsional">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">SN/Token/Kode Voucher</label>
+                            <input type="text" id="sale-sn" class="form-control-neumorph" placeholder="Opsional">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Catatan untuk Pelanggan</label>
+                            <textarea id="sale-customer-notes" class="form-control-neumorph" rows="2"
+                                placeholder="Opsional"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Total Tagihan*</label>
+                            <input type="text" inputmode="numeric" id="sale-price" class="form-control-neumorph"
+                                required placeholder="0">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Harga Beli (Modal)</label>
+                            <input type="text" inputmode="numeric" id="sale-cost" class="form-control-neumorph"
+                                placeholder="Opsional">
+                        </div>
+                        <div class="mb-3 d-none" id="cost-source-wrapper">
+                            <label class="form-label">Modal Diambil Dari*</label>
+                            <select id="cost-source" class="form-select-neumorph">
+                                <option value="product" selected>Stok Produk Fisik</option>
+                                <option value="cash">Tunai (Cash)</option>
+                                <option value="bank">Bank</option>
+                                <option value="app">Aplikasi</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Laba</label>
+                            <div id="laba-field" class="fw-bold p-2 neumorph-card-inset">Rp 0</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Metode Pembayaran*</label>
+                            <select id="payment-method" class="form-select-neumorph">
+                                <option value="cash" selected>Bayar Tunai</option>
+                                <option value="bank">Bayar via Bank</option>
+                                <option value="app">Bayar via Saldo Aplikasi</option>
+                                <option value="utang">Utang (Belum Bayar)</option>
+                                <option value="sebagian">Bayar Sebagian</option>
+                            </select>
+                        </div>
+                        <div class="mb-3 d-none" id="paid-amount-wrapper">
+                            <label class="form-label">Jumlah Dibayar*</label>
+                            <input type="text" inputmode="numeric" id="sale-paid-amount" class="form-control-neumorph"
+                                placeholder="0">
+                            <div id="sisa-utang-display" class="form-text mt-1 text-danger fw-bold"></div>
+                            <label class="form-label mt-2">Uang Masuk Ke*</label>
+                            <select id="paid-amount-asset-target" class="form-select-neumorph">
+                                <option value="cash" selected>Tunai (Cash)</option>
+                                <option value="bank">Bank</option>
+                                <option value="app">Aplikasi</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn neumorph-button w-100 p-3 mt-3">Simpan Transaksi</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="expenseModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="expense-modal-title">Catat Pengeluaran</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="expense-form">
+                        <input type="hidden" id="expense-id">
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah*</label>
+                            <input type="text" inputmode="numeric" id="expense-amount" class="form-control-neumorph"
+                                placeholder="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Kategori*</label>
+                            <!-- UPDATED: Changed to a select dropdown -->
+                            <select id="expense-category" class="form-select-neumorph" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Catatan</label>
+                            <input type="text" id="expense-notes" class="form-control-neumorph">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Jenis Pengeluaran*</label>
+                            <select id="expense-type" class="form-select-neumorph">
+                                <option value="general" selected>Pengeluaran Umum</option>
+                                <option value="stock">Tambah Stok Produk Fisik</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="asset-source-wrapper">
+                            <label class="form-label">Uang Diambil Dari*</label>
+                            <select id="asset-source" class="form-select-neumorph">
+                                <option value="cash" selected>Tunai (Cash)</option>
+                                <option value="bank">Bank</option>
+                                <option value="app">Aplikasi</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn neumorph-button w-100 p-3 mt-3">Simpan Pengeluaran</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Transfer Antar Akun</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="transfer-form">
+                        <div class="mb-3">
+                            <label class="form-label">Jumlah*</label>
+                            <input type="text" inputmode="numeric" id="transfer-amount" class="form-control-neumorph"
+                                placeholder="0" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Dari Akun*</label>
+                            <select id="transfer-from" class="form-select-neumorph">
+                                <option value="cash">Tunai (Cash)</option>
+                                <option value="bank">Bank</option>
+                                <option value="app">Aplikasi</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ke Akun*</label>
+                            <select id="transfer-to" class="form-select-neumorph">
+                                <option value="cash">Tunai (Cash)</option>
+                                <option value="bank" selected>Bank</option>
+                                <option value="app">Aplikasi</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Catatan</label>
+                            <input type="text" id="transfer-notes" class="form-control-neumorph"
+                                placeholder="cth: Setor tunai">
+                        </div>
+                        <button type="submit" class="btn neumorph-button w-100 p-3 mt-3">Simpan Transfer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="settingsModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Pengaturan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Toko/Usaha Anda</label>
+                        <input type="text" id="shop-name" class="form-control-neumorph">
+                    </div>
+                    <hr>
+                    <h6 class="mt-4">Atur Saldo Aset</h6>
+                    <p class="text-muted small">Masukkan saldo Anda saat ini. Ini akan menimpa saldo yang ada.</p>
+                    <div class="mb-2">
+                        <label class="form-label">Saldo Aplikasi</label>
+                        <input type="text" inputmode="numeric" id="asset-app-setting" class="form-control-neumorph"
+                            placeholder="0">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Saldo Tunai (Cash)</label>
+                        <input type="text" inputmode="numeric" id="asset-cash-setting" class="form-control-neumorph"
+                            placeholder="0">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Saldo Bank</label>
+                        <input type="text" inputmode="numeric" id="asset-bank-setting" class="form-control-neumorph"
+                            placeholder="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nilai Stok Produk Fisik</label>
+                        <input type="text" inputmode="numeric" id="asset-product-setting" class="form-control-neumorph"
+                            placeholder="0">
+                    </div>
+                    <button id="btn-save-settings" class="btn neumorph-button w-100 p-3 mb-4">Simpan Pengaturan</button>
+                    <hr>
+                    <!-- NEW: Category Management Section -->
+                    <h6 class="mt-4">Manajemen Kategori Pengeluaran</h6>
+                    <div id="category-list" class="mb-3"></div>
+                    <div class="input-group">
+                        <input type="text" id="new-category-name" class="form-control-neumorph"
+                            placeholder="Nama Kategori Baru">
+                        <button class="btn neumorph-button" type="button" id="btn-add-category">Tambah</button>
+                    </div>
+                    <hr>
+                    <h6 class="mt-4">Backup & Restore Data</h6>
+                    <p class="text-muted small">Simpan data Anda dengan aman atau pulihkan dari file backup.</p>
+                    <div class="d-grid gap-2">
+                        <button id="btn-backup" class="btn neumorph-button"><i data-lucide="download"
+                                class="me-2"></i>Backup Data</button>
+                        <button id="btn-restore" class="btn neumorph-button"><i data-lucide="upload"
+                                class="me-2"></i>Restore Data</button>
+                        <input type="file" id="restore-file-input" class="d-none" accept=".json">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="strukModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div id="struk-area"></div>
+                </div>
+                <div class="modal-footer d-flex justify-content-center flex-wrap gap-2">
+                    <button id="btn-download-struk" class="btn neumorph-button"><i data-lucide="download"></i>
+                        Unduh</button>
+                    <button id="btn-edit-struk" class="btn neumorph-button"><i data-lucide="edit"></i> Edit</button>
+                    <button id="btn-delete-struk" class="btn neumorph-button"><i data-lucide="trash-2"></i>
+                        Hapus</button>
+                    <button class="btn neumorph-button" data-bs-dismiss="modal"><i data-lucide="x"></i> Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Main Application Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const BukuApp = (function () {
+                // --- STATE & CONFIG ---
+                const _state = {
+                    transactions: [],
+                    debts: [],
+                    assets: { cash: 0, bank: 0, app: 0, product: 0 },
+                    // NEW: State for categories
+                    categories: ['Belanja Stok', 'Transportasi', 'Makan', 'Lainnya'],
+                    settings: {
+                        shopName: 'Toko Anda'
+                    },
+                    bsModals: {},
+                    activeTransactionId: null
+                };
+                const DB_NAME = 'bukuKeuanganData_v9'; // Version bump for new data structure
+
+                // --- DOM ELEMENTS CACHE ---
+                const _elements = {
+                    header: {
+                        settingsBtn: document.getElementById('btn-settings')
+                    },
+                    assets: {
+                        app: document.getElementById('asset-app'),
+                        cash: document.getElementById('asset-cash'),
+                        bank: document.getElementById('asset-bank'),
+                        product: document.getElementById('asset-product')
+                    },
+                    report: {
+                        dateFilter: document.getElementById('report-date-filter'),
+                        omzet: document.getElementById('report-omzet'),
+                        profit: document.getElementById('report-profit'),
+                        transactions: document.getElementById('report-transactions')
+                    },
+                    lists: {
+                        transactions: document.getElementById('transactions-list'),
+                        debts: document.getElementById('debts-list')
+                    },
+                    actionButtons: {
+                        sale: document.getElementById('btn-add-sale'),
+                        expense: document.getElementById('btn-add-expense'),
+                        transfer: document.getElementById('btn-add-transfer')
+                    },
+                    search: { // NEW
+                        transactions: document.getElementById('search-transactions')
+                    },
+                    forms: {
+                        sale: document.getElementById('sale-form'),
+                        expense: document.getElementById('expense-form'),
+                        transfer: document.getElementById('transfer-form')
+                    },
+                    modals: {
+                        saleTitle: document.getElementById('sale-modal-title'),
+                        expenseTitle: document.getElementById('expense-modal-title'),
+                        strukArea: document.getElementById('struk-area'),
+                        strukDownloadBtn: document.getElementById('btn-download-struk'),
+                        strukEditBtn: document.getElementById('btn-edit-struk'),
+                        strukDeleteBtn: document.getElementById('btn-delete-struk'),
+                    },
+                    settingsFields: {
+                        shopName: document.getElementById('shop-name'),
+                        assetApp: document.getElementById('asset-app-setting'),
+                        assetCash: document.getElementById('asset-cash-setting'),
+                        assetBank: document.getElementById('asset-bank-setting'),
+                        assetProduct: document.getElementById('asset-product-setting'),
+                        saveBtn: document.getElementById('btn-save-settings'),
+                        backupBtn: document.getElementById('btn-backup'),
+                        restoreBtn: document.getElementById('btn-restore'),
+                        restoreInput: document.getElementById('restore-file-input'),
+                        categoryList: document.getElementById('category-list'), // NEW
+                        newCategoryName: document.getElementById('new-category-name'), // NEW
+                        addCategoryBtn: document.getElementById('btn-add-category') // NEW
+                    },
+                    saleFormFields: {
+                        id: document.getElementById('sale-id'),
+                        customer: document.getElementById('sale-customer'),
+                        product: document.getElementById('sale-product'),
+                        sn: document.getElementById('sale-sn'),
+                        customerNotes: document.getElementById('sale-customer-notes'),
+                        price: document.getElementById('sale-price'),
+                        cost: document.getElementById('sale-cost'),
+                        costSourceWrapper: document.getElementById('cost-source-wrapper'),
+                        costSource: document.getElementById('cost-source'),
+                        profit: document.getElementById('laba-field'),
+                        paidAmountWrapper: document.getElementById('paid-amount-wrapper'),
+                        paidAmount: document.getElementById('sale-paid-amount'),
+                        sisaUtangDisplay: document.getElementById('sisa-utang-display'),
+                        paymentMethod: document.getElementById('payment-method'),
+                        paidAmountAssetTarget: document.getElementById('paid-amount-asset-target')
+                    },
+                    expenseFormFields: {
+                        id: document.getElementById('expense-id'),
+                        amount: document.getElementById('expense-amount'),
+                        category: document.getElementById('expense-category'),
+                        notes: document.getElementById('expense-notes'),
+                        expenseType: document.getElementById('expense-type'),
+                        assetSourceWrapper: document.getElementById('asset-source-wrapper'),
+                        assetSource: document.getElementById('asset-source')
+                    },
+                    transferFormFields: {
+                        amount: document.getElementById('transfer-amount'),
+                        from: document.getElementById('transfer-from'),
+                        to: document.getElementById('transfer-to'),
+                        notes: document.getElementById('transfer-notes')
+                    }
+                };
+
+                // --- HELPER FUNCTIONS ---
+                const _helpers = {
+                    formatCurrency: (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount || 0),
+                    // NEW: Helper to format number input with dots
+                    formatNumberInput: (value) => {
+                        if (!value) return '';
+                        const number = parseInt(value.toString().replace(/[^0-9]/g, ''), 10);
+                        return isNaN(number) ? '' : new Intl.NumberFormat('id-ID').format(number);
+                    },
+                    // NEW: Helper to parse formatted number back to integer
+                    parseFormattedNumber: (value) => {
+                        return value ? parseInt(value.toString().replace(/[^0-9]/g, ''), 10) || 0 : 0;
+                    },
+                    getTodayDateString: () => {
+                        const now = new Date();
+                        const year = now.getFullYear();
+                        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                        const day = now.getDate().toString().padStart(2, '0');
+                        return `${year}-${month}-${day}`;
+                    },
+                    formatDate: (timestamp) => new Date(timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }),
+                    formatTimestamp: (timestamp) => new Date(timestamp).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+                };
+
+                // --- DATA MANAGEMENT (localStorage) ---
+                const _data = {
+                    load() {
+                        try {
+                            const data = JSON.parse(localStorage.getItem(DB_NAME));
+                            if (data) {
+                                _state.transactions = data.transactions || [];
+                                _state.debts = data.debts || [];
+                                _state.assets = data.assets || { cash: 0, bank: 0, app: 0, product: 0 };
+                                if (typeof _state.assets.product === 'undefined') _state.assets.product = 0;
+                                _state.categories = data.categories || ['Belanja Stok', 'Transportasi', 'Makan', 'Lainnya'];
+                                _state.settings = data.settings || { shopName: 'Toko Anda' };
+                            }
+                        } catch (e) { console.error("Gagal memuat data:", e); }
+                    },
+                    save() {
+                        try {
+                            localStorage.setItem(DB_NAME, JSON.stringify({
+                                transactions: _state.transactions,
+                                debts: _state.debts,
+                                assets: _state.assets,
+                                categories: _state.categories,
+                                settings: _state.settings
+                            }));
+                        } catch (e) {
+                            console.error("Gagal menyimpan data:", e);
+                            Swal.fire('Error Penyimpanan', 'Gagal menyimpan data. Mungkin penyimpanan penuh.', 'error');
+                        }
+                    },
+                    backup() {
+                        const dataStr = JSON.stringify({
+                            transactions: _state.transactions,
+                            debts: _state.debts,
+                            assets: _state.assets,
+                            categories: _state.categories,
+                            settings: _state.settings
+                        }, null, 2);
+                        const dataBlob = new Blob([dataStr], { type: "application/json" });
+                        const url = URL.createObjectURL(dataBlob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        const date = new Date().toISOString().slice(0, 10);
+                        link.download = `buku_keuangan_backup_${date}.json`;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        Swal.fire('Berhasil', 'File backup telah diunduh.', 'success');
+                    },
+                    restore() {
+                        const file = _elements.settingsFields.restoreInput.files[0];
+                        if (!file) {
+                            Swal.fire('Error', 'Silakan pilih file backup terlebih dahulu.', 'error');
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = function (event) {
+                            try {
+                                const data = JSON.parse(event.target.result);
+                                if (data.transactions && data.debts && data.settings && data.assets) {
+                                    Swal.fire({
+                                        title: 'Anda Yakin?',
+                                        text: "Ini akan menimpa semua data saat ini. Aksi ini tidak bisa dibatalkan.",
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Ya, pulihkan data!',
+                                        cancelButtonText: 'Batal'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            _state.transactions = data.transactions;
+                                            _state.debts = data.debts;
+                                            _state.assets = data.assets;
+                                            _state.categories = data.categories || ['Belanja Stok', 'Transportasi', 'Makan', 'Lainnya'];
+                                            _state.settings = data.settings;
+                                            _data.save();
+                                            _render.all();
+                                            _state.bsModals.settings.hide();
+                                            Swal.fire('Berhasil!', 'Data Anda telah berhasil dipulihkan.', 'success');
+                                        }
+                                    });
+                                } else {
+                                    Swal.fire('Error', 'File backup tidak valid atau rusak.', 'error');
+                                }
+                            } catch (e) {
+                                Swal.fire('Error', 'Gagal membaca file backup. Pastikan file tidak rusak.', 'error');
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+
+                // --- RENDER FUNCTIONS (Update UI) ---
+                const _render = {
+                    all() {
+                        this.assets();
+                        this.settings();
+                        this.report();
+                        this.transactions();
+                        this.debts();
+                        this.categories();
+                        lucide.createIcons();
+                    },
+                    assets() {
+                        _elements.assets.app.textContent = _helpers.formatCurrency(_state.assets.app);
+                        _elements.assets.cash.textContent = _helpers.formatCurrency(_state.assets.cash);
+                        _elements.assets.bank.textContent = _helpers.formatCurrency(_state.assets.bank);
+                        _elements.assets.product.textContent = _helpers.formatCurrency(_state.assets.product);
+                    },
+                    settings() {
+                        _elements.settingsFields.shopName.value = _state.settings.shopName;
+                        _elements.settingsFields.assetApp.value = _helpers.formatNumberInput(_state.assets.app);
+                        _elements.settingsFields.assetCash.value = _helpers.formatNumberInput(_state.assets.cash);
+                        _elements.settingsFields.assetBank.value = _helpers.formatNumberInput(_state.assets.bank);
+                        _elements.settingsFields.assetProduct.value = _helpers.formatNumberInput(_state.assets.product);
+                    },
+                    report() {
+                        const date = _elements.report.dateFilter.value;
+                        const filteredTransactions = _state.transactions.filter(t => t.date === date);
+
+                        const omzet = filteredTransactions
+                            .filter(t => t.type === 'pemasukan' && t.category.includes('Penjualan'))
+                            .reduce((sum, t) => sum + (t.originalAmount || t.amount), 0);
+
+                        const profit = filteredTransactions
+                            .filter(t => t.category.includes('Penjualan'))
+                            .reduce((sum, t) => sum + (t.profit || 0), 0);
+
+                        const transactionCount = filteredTransactions.filter(t => t.type !== 'transfer').length;
+
+                        _elements.report.omzet.textContent = _helpers.formatCurrency(omzet);
+                        _elements.report.profit.textContent = _helpers.formatCurrency(profit);
+                        _elements.report.transactions.textContent = transactionCount;
+                    },
+                    transactions() {
+                        const listEl = _elements.lists.transactions;
+                        const searchTerm = _elements.search.transactions.value.toLowerCase();
+                        listEl.innerHTML = '';
+
+                        const sorted = [..._state.transactions].sort((a, b) => b.timestamp - a.timestamp);
+                        const filtered = searchTerm ? sorted.filter(t =>
+                            (t.customer && t.customer.toLowerCase().includes(searchTerm)) ||
+                            (t.product && t.product.toLowerCase().includes(searchTerm)) ||
+                            (t.notes && t.notes.toLowerCase().includes(searchTerm)) ||
+                            (t.category && t.category.toLowerCase().includes(searchTerm))
+                        ) : sorted;
+
+                        if (filtered.length === 0) {
+                            listEl.innerHTML = `<div class="empty-state"><i data-lucide="receipt" class="mb-2" style="width:48px; height:48px;"></i><p>${searchTerm ? 'Transaksi tidak ditemukan.' : 'Belum ada transaksi.'}</p></div>`;
+                            lucide.createIcons();
+                            return;
+                        }
+
+                        filtered.forEach(t => {
+                            const isIncome = t.type === 'pemasukan';
+                            const isTransfer = t.type === 'transfer';
+                            const item = document.createElement('div');
+                            item.className = 'transaction-item';
+                            item.dataset.id = t.id;
+
+                            let amountClass = 'transfer';
+                            if (!isTransfer) amountClass = isIncome ? 'pemasukan' : 'pengeluaran';
+
+                            item.innerHTML = `
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold">${t.category}</h6>
+                                        <small class="text-muted">${_helpers.formatDate(t.timestamp)}</small>
+                                        ${t.notes ? `<p class="mb-0 small">${t.notes}</p>` : ''}
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="fw-bold transaction-amount ${amountClass}">${isTransfer ? '' : (isIncome ? '+' : '-')} ${_helpers.formatCurrency(t.amount)}</span>
+                                        ${t.profit > 0 ? `<small class="d-block text-primary">Laba: ${_helpers.formatCurrency(t.profit)}</small>` : ''}
+                                        ${t.status === 'belum_bayar' ? `<small class="d-block text-danger fw-bold">Belum Lunas</small>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                            listEl.appendChild(item);
+                        });
+                    },
+                    debts() {
+                        const listEl = _elements.lists.debts;
+                        listEl.innerHTML = '';
+                        if (_state.debts.length === 0) {
+                            listEl.innerHTML = `<div class="empty-state"><i data-lucide="user-check" class="mb-2" style="width:48px; height:48px;"></i><p>Tidak ada catatan utang.</p></div>`;
+                            lucide.createIcons();
+                            return;
+                        }
+
+                        const sorted = [..._state.debts].sort((a, b) => (a.status === 'lunas' ? 1 : -1) - (b.status === 'lunas' ? 1 : -1) || b.timestamp - a.timestamp);
+                        sorted.forEach(d => {
+                            const item = document.createElement('div');
+                            item.className = `debt-item ${d.status === 'lunas' ? 'lunas' : ''}`;
+                            item.innerHTML = `
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-0 fw-bold customer-name">${d.customer}</h6>
+                                        <small class="text-muted d-block">${_helpers.formatDate(d.timestamp)}</small>
+                                        ${d.notes ? `<p class="mb-0 small">${d.notes}</p>` : ''}
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="fw-bold debt-amount">${_helpers.formatCurrency(d.amount)}</span>
+                                        ${d.status === 'belum_lunas' ? `<button class="btn btn-sm neumorph-button mt-2 btn-pay-debt" data-id="${d.id}">Lunas</button>` : `<span class="badge bg-success mt-2">Lunas</span>`}
+                                    </div>
+                                </div>
+                            `;
+                            listEl.appendChild(item);
+                        });
+                    },
+                    categories() {
+                        const settingsListEl = _elements.settingsFields.categoryList;
+                        const expenseSelectEl = _elements.expenseFormFields.category;
+                        settingsListEl.innerHTML = '';
+                        expenseSelectEl.innerHTML = '';
+
+                        _state.categories.forEach(cat => {
+                            // Populate settings list
+                            const item = document.createElement('div');
+                            item.className = 'd-flex justify-content-between align-items-center p-2 mb-1 neumorph-card-inset';
+                            item.innerHTML = `
+                                <span>${cat}</span>
+                                <button class="btn btn-sm btn-danger p-1 lh-1 btn-delete-category" data-category="${cat}"><i data-lucide="trash-2" style="width:16px; height:16px;"></i></button>
+                            `;
+                            settingsListEl.appendChild(item);
+
+                            // Populate expense form dropdown
+                            const option = document.createElement('option');
+                            option.value = cat;
+                            option.textContent = cat;
+                            expenseSelectEl.appendChild(option);
+                        });
+
+                        // Add special option to add new category from expense form
+                        const addNewOption = document.createElement('option');
+                        addNewOption.value = 'add_new';
+                        addNewOption.textContent = '＋ Tambah Kategori Baru...';
+                        expenseSelectEl.appendChild(addNewOption);
+                    },
+                    struk(transactionId) {
+                        const t = _state.transactions.find(tx => tx.id === transactionId);
+                        if (!t) return;
+
+                        const finalPrice = t.originalAmount || t.amount;
+                        const statusText = t.status === 'belum_bayar' ? 'BELUM LUNAS' : 'LUNAS';
+
+                        const strukHTML = `
+                            <div class="struk-header">
+                                <div class="struk-shop-name">${_state.settings.shopName}</div>
+                            </div>
+                            <hr>
+                            <div>ID: ${t.id}</div>
+                            <div>Waktu: ${_helpers.formatTimestamp(t.timestamp)}</div>
+                            <div>Pelanggan: ${t.customer}</div>
+                            <hr>
+                            <div><strong>RINCIAN PEMBELIAN</strong></div>
+                            <div class="struk-item">
+                                <span>${t.product || t.notes || t.category}</span>
+                                <span>${_helpers.formatCurrency(finalPrice)}</span>
+                            </div>
+                            ${t.serialNumber ? `
+                                <div class="sn-block">
+                                    <small>SN/TOKEN:</small>
+                                    <div class="fw-bold">${t.serialNumber}</div>
+                                </div>
+                            ` : ''}
+                            ${t.customerNotes ? `
+                                <div class="sn-block">
+                                    <small>CATATAN:</small>
+                                    <div class="fw-bold">${t.customerNotes}</div>
+                                </div>
+                            ` : ''}
+                            <hr>
+                            <div class="struk-item fw-bold">
+                                <span>TOTAL</span>
+                                <span>${_helpers.formatCurrency(finalPrice)}</span>
+                            </div>
+                            <div class="struk-item">
+                                <span>Status</span>
+                                <span class="fw-bold">${statusText}</span>
+                            </div>
+                            <div class="struk-footer">
+                                --- Terima Kasih ---
+                            </div>
+                        `;
+                        _elements.modals.strukArea.innerHTML = strukHTML;
+                    }
+                };
+
+                // --- EVENT HANDLERS ---
+                const _events = {
+                    init() {
+                        _elements.report.dateFilter.addEventListener('change', _render.report);
+
+                        _elements.actionButtons.sale.addEventListener('click', _handlers.showSaleModal);
+                        _elements.actionButtons.expense.addEventListener('click', _handlers.showExpenseModal);
+                        _elements.actionButtons.transfer.addEventListener('click', _handlers.showTransferModal);
+
+                        _elements.header.settingsBtn.addEventListener('click', () => _state.bsModals.settings.show());
+
+                        _elements.forms.sale.addEventListener('submit', _handlers.saveSale);
+                        _elements.forms.expense.addEventListener('submit', _handlers.saveExpense);
+                        _elements.forms.transfer.addEventListener('submit', _handlers.saveTransfer);
+
+                        _elements.lists.transactions.addEventListener('click', (e) => {
+                            const item = e.target.closest('.transaction-item');
+                            if (item) _handlers.showStrukModal(item.dataset.id);
+                        });
+                        _elements.lists.debts.addEventListener('click', (e) => {
+                            if (e.target.closest('.btn-pay-debt')) {
+                                _handlers.payDebt(e.target.closest('.btn-pay-debt').dataset.id);
+                            }
+                        });
+
+                        _elements.modals.strukDownloadBtn.addEventListener('click', _handlers.downloadStruk);
+                        _elements.modals.strukEditBtn.addEventListener('click', _handlers.editTransaction);
+                        _elements.modals.strukDeleteBtn.addEventListener('click', _handlers.deleteTransaction);
+
+                        _elements.settingsFields.saveBtn.addEventListener('click', _handlers.saveSettings);
+                        _elements.settingsFields.backupBtn.addEventListener('click', _data.backup);
+                        _elements.settingsFields.restoreBtn.addEventListener('click', () => _elements.settingsFields.restoreInput.click());
+                        _elements.settingsFields.restoreInput.addEventListener('change', _data.restore);
+                        _elements.settingsFields.addCategoryBtn.addEventListener('click', _handlers.addCategory);
+                        _elements.settingsFields.categoryList.addEventListener('click', (e) => {
+                            if (e.target.closest('.btn-delete-category')) {
+                                _handlers.deleteCategory(e.target.closest('.btn-delete-category').dataset.category);
+                            }
+                        });
+
+                        _elements.saleFormFields.paymentMethod.addEventListener('change', (e) => {
+                            const method = e.target.value;
+                            _elements.saleFormFields.paidAmountWrapper.classList.toggle('d-none', method !== 'sebagian');
+                        });
+
+                        _elements.saleFormFields.cost.addEventListener('input', (e) => {
+                            const cost = _helpers.parseFormattedNumber(e.target.value);
+                            _elements.saleFormFields.costSourceWrapper.classList.toggle('d-none', cost <= 0);
+                            calculateProfit();
+                        });
+
+                        _elements.expenseFormFields.expenseType.addEventListener('change', (e) => {
+                            _elements.expenseFormFields.assetSourceWrapper.classList.toggle('d-none', e.target.value === 'stock');
+                        });
+
+                        _elements.expenseFormFields.category.addEventListener('change', (e) => {
+                            if (e.target.value === 'add_new') {
+                                _handlers.addCategoryFromExpense();
+                            }
+                        });
+
+                        _elements.search.transactions.addEventListener('input', _render.transactions);
+
+                        // Auto-format number inputs
+                        const numberInputs = ['sale-price', 'sale-cost', 'sale-paid-amount', 'expense-amount', 'transfer-amount', 'asset-app-setting', 'asset-cash-setting', 'asset-bank-setting', 'asset-product-setting'];
+                        numberInputs.forEach(id => {
+                            document.getElementById(id).addEventListener('input', (e) => {
+                                const value = e.target.value;
+                                e.target.value = _helpers.formatNumberInput(value);
+                            });
+                        });
+
+
+                        const calculateProfit = () => {
+                            const price = _helpers.parseFormattedNumber(_elements.saleFormFields.price.value);
+                            const cost = _helpers.parseFormattedNumber(_elements.saleFormFields.cost.value);
+                            const profit = (price > 0 && cost > 0 && price >= cost) ? price - cost : 0;
+                            _elements.saleFormFields.profit.textContent = _helpers.formatCurrency(profit);
+                        };
+
+                        const calculateSisaUtang = () => {
+                            const price = _helpers.parseFormattedNumber(_elements.saleFormFields.price.value);
+                            const paidAmount = _helpers.parseFormattedNumber(_elements.saleFormFields.paidAmount.value);
+                            const sisaUtangEl = _elements.saleFormFields.sisaUtangDisplay;
+                            if (price > paidAmount && paidAmount > 0) {
+                                const sisa = price - paidAmount;
+                                sisaUtangEl.textContent = `Sisa utang: ${_helpers.formatCurrency(sisa)}`;
+                            } else {
+                                sisaUtangEl.textContent = '';
+                            }
+                        };
+
+                        _elements.saleFormFields.price.addEventListener('input', () => {
+                            calculateProfit();
+                            calculateSisaUtang();
+                        });
+                        _elements.saleFormFields.paidAmount.addEventListener('input', calculateSisaUtang);
+                    }
+                };
+
+                // --- LOGIC HANDLERS ---
+                const _handlers = {
+                    // Modal Show/Hide
+                    showSaleModal(isEdit = false, data = {}) {
+                        if (_state.bsModals.struk) _state.bsModals.struk.hide();
+                        _elements.forms.sale.reset();
+                        _elements.saleFormFields.sisaUtangDisplay.textContent = '';
+                        _elements.modals.saleTitle.textContent = isEdit ? 'Edit Penjualan' : 'Catat Penjualan';
+
+                        _elements.saleFormFields.id.value = data.id || '';
+                        _elements.saleFormFields.customer.value = data.customer || "Pelanggan Umum";
+                        _elements.saleFormFields.product.value = data.product || '';
+                        _elements.saleFormFields.sn.value = data.serialNumber || '';
+                        _elements.saleFormFields.customerNotes.value = data.customerNotes || '';
+                        _elements.saleFormFields.price.value = _helpers.formatNumberInput(data.amount);
+                        _elements.saleFormFields.cost.value = _helpers.formatNumberInput(data.cost);
+
+                        _elements.saleFormFields.costSourceWrapper.classList.toggle('d-none', !(data.cost > 0));
+                        _elements.saleFormFields.costSource.value = data.costSource || 'product';
+
+                        _elements.saleFormFields.paymentMethod.value = data.paymentMethod || 'cash';
+                        _elements.saleFormFields.paidAmountWrapper.classList.toggle('d-none', (data.paymentMethod || 'cash') !== 'sebagian');
+
+                        const profit = (data.amount > (data.cost || 0)) ? data.amount - (data.cost || 0) : 0;
+                        _elements.saleFormFields.profit.textContent = _helpers.formatCurrency(profit);
+
+                        _state.bsModals.sale.show();
+                    },
+                    showExpenseModal(isEdit = false, data = {}) {
+                        if (_state.bsModals.struk) _state.bsModals.struk.hide();
+                        _elements.forms.expense.reset();
+                        _render.categories(); // Re-render categories for the dropdown
+                        _elements.modals.expenseTitle.textContent = isEdit ? 'Edit Pengeluaran' : 'Catat Pengeluaran';
+                        _elements.expenseFormFields.id.value = data.id || '';
+                        _elements.expenseFormFields.amount.value = _helpers.formatNumberInput(data.amount);
+                        _elements.expenseFormFields.category.value = data.category || _state.categories[0];
+                        _elements.expenseFormFields.notes.value = data.notes || '';
+
+                        const expenseType = data.expenseType || 'general';
+                        _elements.expenseFormFields.expenseType.value = expenseType;
+                        _elements.expenseFormFields.assetSourceWrapper.classList.toggle('d-none', expenseType === 'stock');
+                        _elements.expenseFormFields.assetSource.value = data.assetSource || 'cash';
+
+                        _state.bsModals.expense.show();
+                    },
+                    showTransferModal() {
+                        _elements.forms.transfer.reset();
+                        _state.bsModals.transfer.show();
+                    },
+                    showStrukModal(transactionId) {
+                        const t = _state.transactions.find(tx => tx.id === transactionId);
+                        if (!t || t.type === 'transfer') return;
+                        _state.activeTransactionId = transactionId;
+                        _render.struk(transactionId);
+                        _state.bsModals.struk.show();
+                    },
+                    // CRUD and Actions
+                    saveSale(e) {
+                        e.preventDefault();
+                        const id = _elements.saleFormFields.id.value;
+                        if (id) {
+                            _handlers.performDelete(id, false);
+                        }
+
+                        const price = _helpers.parseFormattedNumber(_elements.saleFormFields.price.value);
+                        const cost = _helpers.parseFormattedNumber(_elements.saleFormFields.cost.value);
+                        const costSource = _elements.saleFormFields.costSource.value;
+                        const customer = _elements.saleFormFields.customer.value.trim();
+                        const product = _elements.saleFormFields.product.value.trim();
+                        const serialNumber = _elements.saleFormFields.sn.value.trim();
+                        const customerNotes = _elements.saleFormFields.customerNotes.value.trim();
+                        const paymentMethod = _elements.saleFormFields.paymentMethod.value;
+                        const paidAmount = _helpers.parseFormattedNumber(_elements.saleFormFields.paidAmount.value);
+
+                        if (!price || !customer) {
+                            Swal.fire('Error', 'Harap isi Total Tagihan dan Nama Pelanggan.', 'error'); return;
+                        }
+
+                        if (cost > 0 && _state.assets[costSource] < cost) {
+                            Swal.fire('Error', `Saldo/nilai di aset "${costSource}" tidak mencukupi untuk modal.`, 'error'); return;
+                        }
+
+                        if (cost > 0) {
+                            _state.assets[costSource] -= cost;
+                        }
+
+                        const newId = `trx-${Date.now()}`;
+                        const notes = product ? `Penjualan ${product} ke ${customer}` : `Penjualan ke ${customer}`;
+                        const commonData = { customer, product, cost, costSource, serialNumber, customerNotes, paymentMethod };
+
+                        if (paymentMethod === 'cash' || paymentMethod === 'bank' || paymentMethod === 'app') {
+                            _state.assets[paymentMethod] += price;
+                            _state.transactions.push({
+                                id: newId, type: 'pemasukan', amount: price, status: 'lunas',
+                                profit: price > cost ? price - cost : 0, category: 'Penjualan',
+                                notes: notes, date: _helpers.getTodayDateString(), timestamp: Date.now(), ...commonData, assetTarget: paymentMethod
+                            });
+                        } else if (paymentMethod === 'utang') {
+                            _state.debts.push({
+                                id: `debt-${Date.now()}`, customer: customer, amount: price,
+                                type: 'piutang', notes: `Utang untuk ${product || 'pembelian'}`,
+                                status: 'belum_lunas', date: _helpers.getTodayDateString(), timestamp: Date.now(), sourceTransactionId: newId
+                            });
+                            _state.transactions.push({
+                                id: newId, type: 'pemasukan', amount: price, status: 'belum_bayar',
+                                profit: price > cost ? price - cost : 0, category: 'Penjualan (Piutang)',
+                                notes: notes, date: _helpers.getTodayDateString(), timestamp: Date.now(), ...commonData
+                            });
+                        } else if (paymentMethod === 'sebagian') {
+                            const assetTarget = _elements.saleFormFields.paidAmountAssetTarget.value;
+                            if (paidAmount <= 0 || paidAmount >= price) {
+                                Swal.fire('Error', 'Jumlah dibayar harus lebih dari 0 dan kurang dari total tagihan.', 'error'); return;
+                            }
+                            _state.assets[assetTarget] += paidAmount;
+                            _state.transactions.push({
+                                id: newId, type: 'pemasukan', amount: paidAmount, status: 'belum_bayar',
+                                profit: 0,
+                                category: 'Penjualan (DP)',
+                                notes: `DP dari ${customer} untuk ${product || 'pembelian'}`,
+                                date: _helpers.getTodayDateString(), timestamp: Date.now(),
+                                originalAmount: price, ...commonData, assetTarget
+                            });
+                            _state.debts.push({
+                                id: `debt-${Date.now()}`, customer: customer, amount: price - paidAmount,
+                                type: 'piutang', notes: `Sisa utang untuk ${product || 'pembelian'}`,
+                                status: 'belum_lunas', date: _helpers.getTodayDateString(), timestamp: Date.now(), sourceTransactionId: newId
+                            });
+                        }
+
+                        _data.save();
+                        _render.all();
+                        _state.bsModals.sale.hide();
+                        Swal.fire({ icon: 'success', title: 'Transaksi berhasil disimpan!', showConfirmButton: false, timer: 1500 });
+                    },
+                    saveExpense(e) {
+                        e.preventDefault();
+                        const id = _elements.expenseFormFields.id.value;
+                        if (id) {
+                            _handlers.performDelete(id, false);
+                        }
+
+                        const amount = _helpers.parseFormattedNumber(_elements.expenseFormFields.amount.value);
+                        const category = _elements.expenseFormFields.category.value;
+                        const notes = _elements.expenseFormFields.notes.value.trim();
+                        const expenseType = _elements.expenseFormFields.expenseType.value;
+                        const assetSource = _elements.expenseFormFields.assetSource.value;
+
+                        if (!amount || !category) {
+                            Swal.fire('Error', 'Harap isi Jumlah dan Kategori.', 'error'); return;
+                        }
+
+                        if (expenseType === 'general') {
+                            if (_state.assets[assetSource] < amount) {
+                                Swal.fire('Error', `Saldo di akun ${assetSource} tidak mencukupi.`, 'error'); return;
+                            }
+                            _state.assets[assetSource] -= amount;
+                        } else if (expenseType === 'stock') {
+                            _state.assets.product += amount;
+                        }
+
+                        _state.transactions.push({
+                            id: `trx-${Date.now()}`, type: 'pengeluaran', amount: amount,
+                            profit: 0, category: category, notes: notes, assetSource, expenseType,
+                            date: _helpers.getTodayDateString(), timestamp: Date.now()
+                        });
+
+                        _data.save();
+                        _render.all();
+                        _state.bsModals.expense.hide();
+                        Swal.fire({ icon: 'success', title: 'Pengeluaran berhasil disimpan!', showConfirmButton: false, timer: 1500 });
+                    },
+                    saveTransfer(e) {
+                        e.preventDefault();
+                        const amount = _helpers.parseFormattedNumber(_elements.transferFormFields.amount.value);
+                        const from = _elements.transferFormFields.from.value;
+                        const to = _elements.transferFormFields.to.value;
+                        const notes = _elements.transferFormFields.notes.value.trim();
+
+                        if (!amount || amount <= 0) {
+                            Swal.fire('Error', 'Jumlah transfer harus lebih dari 0.', 'error'); return;
+                        }
+                        if (from === to) {
+                            Swal.fire('Error', 'Tidak bisa transfer ke akun yang sama.', 'error'); return;
+                        }
+                        if (_state.assets[from] < amount) {
+                            Swal.fire('Error', `Saldo di akun ${from} tidak mencukupi.`, 'error'); return;
+                        }
+
+                        _state.assets[from] -= amount;
+                        _state.assets[to] += amount;
+
+                        _state.transactions.push({
+                            id: `trx-${Date.now()}`, type: 'transfer', amount: amount,
+                            category: 'Transfer Antar Akun',
+                            notes: notes || `Transfer dari ${from} ke ${to}`,
+                            date: _helpers.getTodayDateString(), timestamp: Date.now(),
+                            assetSource: from, assetTarget: to
+                        });
+
+                        _data.save();
+                        _render.all();
+                        _state.bsModals.transfer.hide();
+                        Swal.fire({ icon: 'success', title: 'Transfer berhasil dicatat!', showConfirmButton: false, timer: 1500 });
+                    },
+                    payDebt(debtId) {
+                        const debt = _state.debts.find(d => d.id === debtId);
+                        if (!debt) return;
+
+                        Swal.fire({
+                            title: 'Konfirmasi Pelunasan',
+                            text: `Yakin ${debt.customer} sudah melunasi utang sebesar ${_helpers.formatCurrency(debt.amount)}?`,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Ya, Sudah Lunas',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                debt.status = 'lunas';
+                                if (debt.sourceTransactionId) {
+                                    const sourceTx = _state.transactions.find(t => t.id === debt.sourceTransactionId);
+                                    if (sourceTx) {
+                                        sourceTx.status = 'lunas';
+                                        sourceTx.category = 'Penjualan';
+                                        if (sourceTx.cost > 0) {
+                                            const totalAmount = sourceTx.originalAmount || sourceTx.amount;
+                                            sourceTx.profit = totalAmount - sourceTx.cost;
+                                        }
+                                    }
+                                }
+
+                                Swal.fire({
+                                    title: 'Catat sebagai Pemasukan?',
+                                    html: `
+                                        <p>Ini akan menambahkan catatan pemasukan baru.</p>
+                                        <strong>Uang masuk ke:</strong>
+                                        <div class="swal2-radio d-flex justify-content-center mt-2" style="gap: 1rem;">
+                                            <label><input type="radio" name="swal-asset" value="cash" checked> Tunai</label>
+                                            <label><input type="radio" name="swal-asset" value="bank"> Bank</label>
+                                            <label><input type="radio" name="swal-asset" value="app"> Aplikasi</label>
+                                        </div>
+                                    `,
+                                    icon: 'info',
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Ya, Catat',
+                                    cancelButtonText: 'Tidak, Jangan',
+                                    preConfirm: () => {
+                                        return document.querySelector('input[name="swal-asset"]:checked').value;
+                                    }
+                                }).then((res) => {
+                                    if (res.isConfirmed) {
+                                        const assetTarget = res.value;
+                                        _state.assets[assetTarget] += debt.amount;
+                                        _state.transactions.push({
+                                            id: `trx-${Date.now()}`, type: 'pemasukan', amount: debt.amount,
+                                            profit: 0, category: 'Pelunasan Piutang',
+                                            notes: `Pelunasan dari ${debt.customer}`, assetTarget,
+                                            date: _helpers.getTodayDateString(), timestamp: Date.now()
+                                        });
+                                    }
+                                    _data.save();
+                                    _render.all();
+                                    Swal.fire('Berhasil!', 'Utang telah ditandai lunas.', 'success');
+                                });
+                            }
+                        });
+                    },
+                    downloadStruk() {
+                        const strukNode = _elements.modals.strukArea;
+                        html2canvas(strukNode, {
+                            backgroundColor: '#ffffff',
+                            scale: 2
+                        }).then(canvas => {
+                            const link = document.createElement('a');
+                            link.download = `struk-${_state.activeTransactionId}.png`;
+                            link.href = canvas.toDataURL('image/png');
+                            link.click();
+                        });
+                    },
+                    editTransaction() {
+                        const t = _state.transactions.find(tx => tx.id === _state.activeTransactionId);
+                        if (!t) return;
+                        if (t.type === 'pemasukan' || t.category.includes('Penjualan')) {
+                            const saleData = {
+                                id: t.id,
+                                customer: t.customer,
+                                product: t.product,
+                                serialNumber: t.serialNumber,
+                                customerNotes: t.customerNotes,
+                                amount: t.originalAmount || t.amount,
+                                cost: t.cost,
+                                costSource: t.costSource,
+                                paymentMethod: t.paymentMethod,
+                                assetTarget: t.assetTarget
+                            };
+                            _handlers.showSaleModal(true, saleData);
+                        } else {
+                            _handlers.showExpenseModal(true, t);
+                        }
+                    },
+                    deleteTransaction() {
+                        Swal.fire({
+                            title: 'Anda Yakin?',
+                            text: "Transaksi ini dan semua catatan utang yang terkait akan dihapus permanen! Saldo Aset akan dikembalikan.",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'Ya, hapus!',
+                            cancelButtonText: 'Batal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                _handlers.performDelete(_state.activeTransactionId, true);
+                            }
+                        });
+                    },
+                    performDelete(transactionId, showSuccessAlert = true) {
+                        const tIndex = _state.transactions.findIndex(t => t.id === transactionId);
+                        if (tIndex === -1) return;
+
+                        const t = _state.transactions[tIndex];
+
+                        // Revert asset changes
+                        if (t.type === 'pemasukan') {
+                            if (t.status !== 'belum_bayar') {
+                                _state.assets[t.assetTarget] -= t.amount;
+                            }
+                            if (t.cost > 0 && t.costSource) {
+                                _state.assets[t.costSource] += t.cost;
+                            }
+                        } else if (t.type === 'pengeluaran') {
+                            if (t.expenseType === 'stock') {
+                                _state.assets.product -= t.amount;
+                            } else {
+                                _state.assets[t.assetSource] += t.amount;
+                            }
+                        } else if (t.type === 'transfer') {
+                            _state.assets[t.assetSource] += t.amount;
+                            _state.assets[t.assetTarget] -= t.amount;
+                        }
+
+                        _state.transactions.splice(tIndex, 1);
+                        _state.debts = _state.debts.filter(d => d.sourceTransactionId !== transactionId);
+
+                        _data.save();
+                        _render.all();
+                        if (_state.bsModals.struk) _state.bsModals.struk.hide();
+
+                        if (showSuccessAlert) {
+                            Swal.fire('Terhapus!', 'Transaksi telah berhasil dihapus.', 'success');
+                        }
+                    },
+                    saveSettings() {
+                        _state.settings.shopName = _elements.settingsFields.shopName.value.trim() || 'Toko Anda';
+                        _state.assets.app = _helpers.parseFormattedNumber(_elements.settingsFields.assetApp.value);
+                        _state.assets.cash = _helpers.parseFormattedNumber(_elements.settingsFields.assetCash.value);
+                        _state.assets.bank = _helpers.parseFormattedNumber(_elements.settingsFields.assetBank.value);
+                        _state.assets.product = _helpers.parseFormattedNumber(_elements.settingsFields.assetProduct.value);
+                        _data.save();
+                        _render.all();
+                        Swal.fire({ icon: 'success', title: 'Pengaturan disimpan!', showConfirmButton: false, timer: 1500 });
+                    },
+                    addCategory() {
+                        const newCat = _elements.settingsFields.newCategoryName.value.trim();
+                        if (newCat && !_state.categories.includes(newCat)) {
+                            _state.categories.push(newCat);
+                            _data.save();
+                            _render.categories();
+                            lucide.createIcons();
+                            _elements.settingsFields.newCategoryName.value = '';
+                        }
+                    },
+                    deleteCategory(categoryName) {
+                        _state.categories = _state.categories.filter(c => c !== categoryName);
+                        _data.save();
+                        _render.categories();
+                        lucide.createIcons();
+                    },
+                    async addCategoryFromExpense() {
+                        const { value: newCategory } = await Swal.fire({
+                            title: 'Tambah Kategori Baru',
+                            input: 'text',
+                            inputLabel: 'Nama Kategori',
+                            inputPlaceholder: 'Masukkan nama kategori...',
+                            showCancelButton: true,
+                            confirmButtonText: 'Simpan',
+                            cancelButtonText: 'Batal',
+                            inputValidator: (value) => {
+                                if (!value) {
+                                    return 'Nama kategori tidak boleh kosong!';
+                                }
+                                if (_state.categories.includes(value.trim())) {
+                                    return 'Kategori sudah ada!';
+                                }
+                            }
+                        });
+
+                        if (newCategory) {
+                            const trimmedCat = newCategory.trim();
+                            _state.categories.push(trimmedCat);
+                            _data.save();
+                            _render.categories();
+                            _elements.expenseFormFields.category.value = trimmedCat;
+                        } else {
+                            // Reset to first category if user cancels
+                            _elements.expenseFormFields.category.value = _state.categories[0];
+                        }
+                    }
+                };
+
+                // --- PUBLIC API ---
+                return {
+                    init() {
+                        _elements.report.dateFilter.value = _helpers.getTodayDateString();
+
+                        _state.bsModals.sale = new bootstrap.Modal(document.getElementById('saleModal'));
+                        _state.bsModals.expense = new bootstrap.Modal(document.getElementById('expenseModal'));
+                        _state.bsModals.transfer = new bootstrap.Modal(document.getElementById('transferModal'));
+                        _state.bsModals.settings = new bootstrap.Modal(document.getElementById('settingsModal'));
+                        _state.bsModals.struk = new bootstrap.Modal(document.getElementById('strukModal'));
+
+                        _data.load();
+                        _events.init();
+                        _render.all();
+                    }
+                };
+            })();
+
+            BukuApp.init();
+        });
+    </script>
+</body>
+
+</html>
