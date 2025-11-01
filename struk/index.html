@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generator Struk (Manual & Teks)</title>
+    <!-- 1. Memuat Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 2. Memuat Library html2canvas untuk konversi ke PNG -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" xintegrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEMYGTYuxpHQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- 3. Memuat font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .receipt-divider {
+            border-top: 2px dashed #d1d5db; /* gray-300 */
+        }
+        /* Memastikan placeholder menampilkan baris baru */
+        textarea::placeholder {
+            white-space: pre-line;
+            line-height: 1.5;
+        }
+        /* Style untuk input tanggal agar konsisten */
+        input[type="date"] {
+            -webkit-appearance: none;
+            appearance: none;
+            position: relative;
+        }
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0.75rem; /* Sesuaikan dengan padding input */
+            color: transparent;
+            background: transparent;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-xl mx-auto space-y-6">
+        
+        <!-- === BAGIAN INPUT === -->
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h1 class="text-2xl font-bold text-gray-800 mb-4">Generator Struk</h1>
+            
+            <!-- === INPUT TANGGAL (Global) === -->
+            <div class="mb-4">
+                <label for="input-date" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Transaksi</label>
+                <input type="date" id="input-date" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 relative">
+            </div>
+
+            <!-- === NAVIGASI TAB === -->
+            <div class="mb-4 flex border-b border-gray-200">
+                <button id="tab-manual" class="flex-1 py-3 px-4 font-medium text-center text-blue-600 border-b-2 border-blue-600 transition-colors">
+                    Input Manual
+                </button>
+                <button id="tab-text" class="flex-1 py-3 px-4 font-medium text-center text-gray-500 hover:text-gray-700 transition-colors">
+                    Tempel Teks
+                </button>
+            </div>
+
+            <!-- === KONTEN TAB: INPUT MANUAL (Default) === -->
+            <div id="manual-content" class="space-y-4">
+                <p class="text-sm text-gray-600 mb-4">Masukkan detail transaksi secara manual.</p>
+                <div>
+                    <label for="input-platform" class="block text-sm font-medium text-gray-700 mb-1">Nama Platform</label>
+                    <input type="text" id="input-platform" placeholder="Contoh: MDR PULSA" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="input-tujuan" class="block text-sm font-medium text-gray-700 mb-1">Tujuan Pengiriman</label>
+                    <input type="text" id="input-tujuan" placeholder="Contoh: Wawewo Roster" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label for="input-amount" class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Total Transfer)</label>
+                    <input type="text" id="input-amount" placeholder="Contoh: Rp 70.000" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                 <div>
+                    <label for="input-cs" class="block text-sm font-medium text-gray-700 mb-1">Nomor CS</label>
+                    <input type="text" id="input-cs" placeholder="Contoh: 088988444888" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <!-- Input Status dihapus -->
+            </div>
+
+            <!-- === KONTEN TAB: TEMPEL TEKS (Tersembunyi) === -->
+            <div id="text-content" class="hidden">
+                 <p class="text-sm text-gray-600 mb-4">Tempel teks struk mentah dari aplikasi Anda (hanya struk sukses).</p>
+                 <textarea id="text-input" rows="7" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="CONTOH FORMAT (Tempel di sini):
+
+MDR PULSA : Transfer Saldo kamu sebesar Rp 123.000 telah berhasil dikirimkan ke John Doe Cell
+============================
+Jika butuh bantuan hubungi kami : 
+- Customer Service (WhatsApp Chat) : 081234567890"></textarea>
+            </div>
+            
+            <!-- === TOMBOL GENERATE (Bersama) === -->
+            <button id="generate-btn" class="mt-6 w-full bg-blue-600 text-white font-medium py-3 px-4 rounded-lg shadow-sm hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                Buat Pratinjau Struk
+            </button>
+        </div>
+
+        <!-- === BAGIAN PRATINJAU (Bersama) === -->
+        <div id="receipt-container" class="hidden">
+            <div id="receipt-preview" class="bg-white rounded-lg shadow-lg max-w-sm w-full mx-auto overflow-hidden">
+                <!-- Header -->
+                <div class="p-6 border-b border-gray-200">
+                    <h1 id="receipt-platform" class="text-center text-2xl font-bold text-blue-600">NAMA PLATFORM</h1>
+                </div>
+                
+                <!-- Konten -->
+                <div class="p-6">
+                    <div class="flex flex-col items-center text-center">
+                        <div id="receipt-icon-container" class="bg-green-100 rounded-full p-3">
+                            <svg id="receipt-icon-success" class="w-10 h-10 text-green-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                              <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <h2 id="receipt-status-text" class="text-xl font-semibold text-gray-800 mt-4">Transfer Saldo Berhasil</h2>
+                        <p id="receipt-status-subtext" class="text-gray-500 text-sm mt-1">Saldo telah berhasil dikirimkan.</p>
+                    </div>
+                    <div class="receipt-divider my-6"></div>
+                    <div class="space-y-3 text-sm">
+                         <div class="flex justify-between">
+                            <span class="text-gray-500">Tanggal</span>
+                            <span id="receipt-date" class="font-medium text-gray-900"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Tujuan</span>
+                            <span id="receipt-destination" class="font-medium text-gray-900"></span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Jenis Transaksi</span>
+                            <span class="font-medium text-gray-900">Transfer Saldo</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-500">Status</span>
+                            <span id="receipt-status" class="font-medium text-green-600 bg-green-100 px-2 py-0.5 rounded-full">Berhasil</span>
+                        </div>
+                        <div class="border-t border-gray-200 my-3"></div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500 font-medium">Total Transfer</span>
+                            <span id="receipt-amount" class="text-lg font-bold text-gray-900"></span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Footer -->
+                <div class="bg-gray-50 p-6 rounded-b-lg border-t border-gray-200 text-center">
+                    <p class="text-sm text-gray-600 mb-3">Butuh bantuan? Hubungi kami:</p>
+                    <span id="receipt-cs" class="text-green-600 font-medium text-lg"></span>
+                    <p class="text-xs text-gray-400 mt-1">Customer Service (WA Chat)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- === BAGIAN TOMBOL DOWNLOAD (Bersama) === -->
+        <div id="download-section" class="bg-white p-6 rounded-lg shadow-lg text-center hidden">
+             <p class="text-gray-600 mb-4">Pratinjau struk berhasil dibuat. Silakan unduh gambar.</p>
+            <button id="download-btn" class="w-full bg-green-600 text-white font-medium py-3 px-4 rounded-lg shadow-sm hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                Unduh Gambar (.png)
+            </button>
+        </div>
+    </div>
+
+    <!-- === MODAL NOTIFIKASI (Bersama) === -->
+    <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-sm w-full p-6 text-center">
+            <p id="modal-message" class="text-gray-700 mb-6"></p>
+            <button id="modal-close-btn" class="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- === JAVASCRIPT LOGIC === -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // === REFERENSI ELEMEN ===
+            // Tab
+            const tabManual = document.getElementById('tab-manual');
+            const tabText = document.getElementById('tab-text');
+            const manualContent = document.getElementById('manual-content');
+            const textContent = document.getElementById('text-content');
+
+            // Tombol
+            const generateBtn = document.getElementById('generate-btn');
+            const downloadBtn = document.getElementById('download-btn');
+            
+            // Input Global
+            const inputDate = document.getElementById('input-date');
+
+            // Input Manual
+            const inputPlatform = document.getElementById('input-platform');
+            const inputTujuan = document.getElementById('input-tujuan');
+            const inputAmount = document.getElementById('input-amount');
+            // const inputStatus = document.getElementById('input-status'); // Dihapus
+            const inputCs = document.getElementById('input-cs');
+            
+            // Input Teks
+            const textInput = document.getElementById('text-input');
+            
+            // Pratinjau & Download
+            const receiptContainer = document.getElementById('receipt-container');
+            const receiptPreview = document.getElementById('receipt-preview');
+            const downloadSection = document.getElementById('download-section');
+
+            // Elemen Struk
+            const platformEl = document.getElementById('receipt-platform');
+            const dateEl = document.getElementById('receipt-date'); // Baru
+            const statusTextEl = document.getElementById('receipt-status-text');
+            const statusSubTextEl = document.getElementById('receipt-status-subtext');
+            const destinationEl = document.getElementById('receipt-destination');
+            const statusEl = document.getElementById('receipt-status');
+            const amountEl = document.getElementById('receipt-amount');
+            const csEl = document.getElementById('receipt-cs');
+            
+            // Ikon
+            const iconContainer = document.getElementById('receipt-icon-container');
+            const iconSuccess = document.getElementById('receipt-icon-success');
+            // Ikon fail & pending tidak lagi digunakan tapi elemennya ada
+            
+            // Modal
+            const modal = document.getElementById('modal');
+            const modalMessage = document.getElementById('modal-message');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+
+            // === STATE ===
+            let activeTab = 'manual'; // 'manual' or 'text'
+            let currentData = {}; // Menyimpan data struk terakhir untuk diunduh
+
+            // === FUNGSI MODAL ===
+            function showModal(message) {
+                modalMessage.textContent = message;
+                modal.classList.remove('hidden');
+            }
+            modalCloseBtn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+            });
+
+            // === FUNGSI TAB ===
+            function setActiveTab(tabName) {
+                activeTab = tabName;
+                if (tabName === 'manual') {
+                    manualContent.classList.remove('hidden');
+                    textContent.classList.add('hidden');
+                    tabManual.classList.add('text-blue-600', 'border-blue-600');
+                    tabManual.classList.remove('text-gray-500', 'hover:text-gray-700');
+                    tabText.classList.add('text-gray-500', 'hover:text-gray-700');
+                    tabText.classList.remove('text-blue-600', 'border-blue-600');
+                } else {
+                    manualContent.classList.add('hidden');
+                    textContent.classList.remove('hidden');
+                    tabText.classList.add('text-blue-600', 'border-blue-600');
+                    tabText.classList.remove('text-gray-500', 'hover:text-gray-700');
+                    tabManual.classList.add('text-gray-500', 'hover:text-gray-700');
+                    tabManual.classList.remove('text-blue-600', 'border-blue-600');
+                }
+                receiptContainer.classList.add('hidden');
+                downloadSection.classList.add('hidden');
+            }
+
+            tabManual.addEventListener('click', () => setActiveTab('manual'));
+            tabText.addEventListener('click', () => setActiveTab('text'));
+
+            // === FUNGSI RENDER STRUK ===
+            function renderReceipt(data) {
+                currentData = data; 
+                
+                // Update Teks
+                platformEl.textContent = data.platform.toUpperCase();
+                destinationEl.textContent = data.tujuan;
+                amountEl.textContent = data.amount;
+                csEl.textContent = data.cs;
+                
+                // Format tanggal ke "DD MMMM YYYY" (contoh: 01 November 2025)
+                const dateObj = new Date(data.date + 'T00:00:00'); // Tambah T00:00 agar tidak ada isu timezone
+                const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                dateEl.textContent = dateObj.toLocaleDateString('id-ID', options);
+
+                // --- Status Selalu Berhasil ---
+                // Teks dan styling status diatur statis
+                statusTextEl.textContent = 'Transfer Saldo Berhasil';
+                statusSubTextEl.textContent = 'Saldo telah berhasil dikirimkan.';
+                statusEl.textContent = 'Berhasil';
+                statusEl.className = "font-medium text-green-600 bg-green-100 px-2 py-0.5 rounded-full";
+                
+                // Ikon diatur statis
+                iconContainer.className = "bg-green-100 rounded-full p-3";
+                iconSuccess.classList.remove('hidden');
+                iconSuccess.classList.add('text-green-600');
+                
+                // (Ikon fail/pending disembunyikan secara default di HTML, jadi tidak perlu disembunyikan lagi)
+                // --- Akhir Blok Status ---
+                
+                // Tampilkan pratinjau
+                receiptContainer.classList.remove('hidden');
+                downloadSection.classList.remove('hidden');
+            }
+
+            // === FUNGSI PARSE TEKS ===
+            function parseTextData(transactionDate) {
+                const text = textInput.value;
+                
+                // Regex mencari 'berhasil' atau 'sukses', tapi tidak lagi 'gagal'
+                const regex = /(.*?):.*?sebesar (Rp\s*[\d\.,]+) telah (berhasil|sukses) dikirimkan ke (.*?)(?=\n| Customer|$)/i;
+                const matches = text.match(regex);
+                
+                const csRegex = /Customer Service.*?([\d\s-]{8,})/i;
+                const csMatches = text.match(csRegex);
+
+                if (!matches) {
+                    showModal('Format teks tidak dikenali. Pastikan Anda menyalin teks struk transfer saldo yang "Berhasil".');
+                    return null;
+                }
+                
+                return {
+                    platform: matches[1].trim(),
+                    amount: matches[2].trim(),
+                    status: 'berhasil', // Hardcoded
+                    tujuan: matches[4].trim(),
+                    cs: csMatches ? csMatches[1].replace(/-/g, '').trim() : "Nomor CS tidak ditemukan",
+                    date: transactionDate // Ambil dari input date global
+                };
+            }
+
+            // === EVENT LISTENER UTAMA ===
+
+            // 1. Tombol "Buat Pratinjau Struk"
+            generateBtn.addEventListener('click', () => {
+                let dataToRender = null;
+                const transactionDate = inputDate.value;
+
+                // Validasi tanggal dulu
+                if (!transactionDate) {
+                    showModal('Harap pilih tanggal transaksi terlebih dahulu.');
+                    return;
+                }
+
+                if (activeTab === 'manual') {
+                    const data = {
+                        platform: inputPlatform.value,
+                        tujuan: inputTujuan.value,
+                        amount: inputAmount.value,
+                        status: 'berhasil', // Hardcoded
+                        cs: inputCs.value,
+                        date: transactionDate
+                    };
+                    
+                    if (!data.platform || !data.tujuan || !data.amount || !data.cs) {
+                        showModal('Harap isi semua kolom untuk membuat struk.');
+                        return;
+                    }
+                    dataToRender = data;
+
+                } else { // activeTab === 'text'
+                    dataToRender = parseTextData(transactionDate);
+                    if (!dataToRender) return; // Modal error sudah ditampilkan oleh parseTextData()
+                }
+
+                if (dataToRender) {
+                    renderReceipt(dataToRender);
+                }
+            });
+
+            // 2. Tombol "Unduh Gambar"
+            downloadBtn.addEventListener('click', () => {
+                const originalText = downloadBtn.textContent;
+                downloadBtn.textContent = 'Memproses...';
+                downloadBtn.disabled = true;
+
+                html2canvas(receiptPreview, {
+                    useCORS: true,
+                    scale: 2 // Resolusi 2x
+                }).then(canvas => {
+                    const link = document.createElement('a');
+                    const safeDest = (currentData.tujuan || 'tujuan').toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    const safeAmount = (currentData.amount || 'jumlah').toLowerCase().replace(/[^a-z0-9]/g, '');
+                    
+                    link.download = `struk_${safeDest}_${safeAmount}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+
+                    downloadBtn.textContent = originalText;
+                    downloadBtn.disabled = false;
+                    showModal('Gambar struk telah berhasil diunduh.');
+
+                }).catch(err => {
+                    console.error('Gagal membuat gambar:', err);
+                    showModal('Terjadi kesalahan saat membuat gambar.');
+                    downloadBtn.textContent = originalText;
+                    downloadBtn.disabled = false;
+                });
+            });
+
+            // Inisialisasi tab
+            setActiveTab('manual');
+            
+            // Set default tanggal ke hari ini
+            const today = new Date().toISOString().split('T')[0];
+            inputDate.value = today;
+        });
+    </script>
+
+</body>
+</html>
+
+
