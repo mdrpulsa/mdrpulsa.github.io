@@ -1,0 +1,121 @@
+<!-- index.html : Sistem Kunjungan PRO (Mobile Only, LocalStorage, Lengkap) -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sistem Kunjungan</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;width:100%;overflow-x:hidden;font-family:system-ui,-apple-system,Arial;background:#f2f4f7}
+    body{padding:12px;font-size:14px}
+    h1{font-size:18px;text-align:center;margin:8px 0 12px;font-weight:600}
+    .card{background:#fff;border-radius:12px;padding:12px;margin-bottom:12px;box-shadow:0 4px 12px rgba(0,0,0,.06)}
+    label{font-size:12px;font-weight:600;margin-top:8px;display:block}
+    input{width:100%;padding:10px;margin-top:4px;border-radius:8px;border:1px solid #d0d5dd}
+    button{width:100%;padding:12px;border-radius:10px;border:none;margin-top:10px;background:#2563eb;color:#fff;font-weight:600}
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
+    th,td{padding:6px 4px;font-size:11px;border-bottom:1px solid #e5e7eb;word-break:break-word}
+    th{background:#f9fafb}
+    .on{color:#16a34a;font-weight:600}
+    .late{color:#dc2626;font-weight:600}
+    .mini{font-size:11px;color:#555}
+    .actions button{background:#ef4444;margin:2px 0;padding:6px;font-size:11px}
+  </style>
+</head>
+<body>
+
+<h1>Sistem Kunjungan Lapangan</h1>
+
+<div class="card">
+  <label>Tanggal</label><input id="tanggal" type="date">
+  <label>Petugas</label><input id="petugas" type="text">
+  <label>Area</label><input id="area" type="text">
+  <label>Toko / Agen</label><input id="toko" type="text">
+  <label>Jam Rencana</label><input id="jamRencana" type="time">
+  <label>Jam Realisasi</label><input id="jamRealisasi" type="time">
+  <label>Hasil</label><input id="hasil" type="text">
+  <label>Tindak Lanjut</label><input id="tindakLanjut" type="text">
+  <button onclick="simpan()">Simpan Kunjungan</button>
+</div>
+
+<div class="card">
+  <div id="ringkasan" class="mini"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>Tgl</th><th>Toko</th><th>Rnc</th><th>Rls</th><th>Status</th><th>Hasil</th><th>Aksi</th>
+      </tr>
+    </thead>
+    <tbody id="data"></tbody>
+  </table>
+  <button onclick="exportCSV()">Export CSV</button>
+  <button onclick="backupJSON()">Backup JSON</button>
+</div>
+
+<script>
+  const key='kunjungan_pro';
+  const dataEl=document.getElementById('data');
+  const ringkasan=document.getElementById('ringkasan');
+
+  function status(r,r2){return r2<=r?'ON TIME':'TELAT'}
+
+  function load(){
+    const d=JSON.parse(localStorage.getItem(key)||'[]');
+    dataEl.innerHTML='';
+    let on=0,late=0;
+    d.forEach((x,i)=>{
+      const st=status(x.jamRencana,x.jamRealisasi);
+      st==='ON TIME'?on++:late++;
+      dataEl.innerHTML+=`<tr>
+        <td>${x.tanggal}</td>
+        <td>${x.toko}</td>
+        <td>${x.jamRencana}</td>
+        <td>${x.jamRealisasi}</td>
+        <td class="${st==='ON TIME'?'on':'late'}">${st}</td>
+        <td>${x.hasil}</td>
+        <td class="actions"><button onclick="hapus(${i})">Hapus</button></td>
+      </tr>`;
+    });
+    ringkasan.innerText=`Total: ${d.length} | ON TIME: ${on} | TELAT: ${late}`;
+  }
+
+  function simpan(){
+    const d=JSON.parse(localStorage.getItem(key)||'[]');
+    d.push({
+      tanggal:tanggal.value,petugas:petugas.value,area:area.value,toko:toko.value,
+      jamRencana:jamRencana.value,jamRealisasi:jamRealisasi.value,hasil:hasil.value,tindakLanjut:tindakLanjut.value
+    });
+    localStorage.setItem(key,JSON.stringify(d));
+    document.querySelectorAll('input').forEach(i=>i.value='');
+    load();
+  }
+
+  function hapus(i){
+    const d=JSON.parse(localStorage.getItem(key)||'[]');
+    d.splice(i,1);
+    localStorage.setItem(key,JSON.stringify(d));
+    load();
+  }
+
+  function exportCSV(){
+    const d=JSON.parse(localStorage.getItem(key)||'[]');
+    let csv='Tanggal,Toko,Rencana,Realisasi,Status,Hasil\n';
+    d.forEach(x=>csv+=`${x.tanggal},${x.toko},${x.jamRencana},${x.jamRealisasi},${status(x.jamRencana,x.jamRealisasi)},${x.hasil}\n`);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([csv]));
+    a.download='kunjungan.csv';a.click();
+  }
+
+  function backupJSON(){
+    const d=localStorage.getItem(key);
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(new Blob([d]));
+    a.download='backup_kunjungan.json';a.click();
+  }
+
+  load();
+</script>
+
+</body>
+</html>
