@@ -34,7 +34,7 @@
             --card-bg: #ffffff;
             --border-color: #e2e8f0;
             --shadow-color: rgba(0, 100, 120, 0.1);
-            --logo-url: url("https://sp1453.serpul.co.id/img/asset/header-white-20240203101151.png");
+            --logo-url: url("https://firebasestorage.googleapis.com/v0/b/mdr-store-45ddc.firebasestorage.app/o/Logo%201%20Transparant.png?alt=media&token=64b0274b-bdee-4592-8a6b-913c4f37fd16");
             --radius-medium: 16px;
             --radius-large: 24px;
         }
@@ -366,20 +366,24 @@
         }
 
         .app-icon {
-            width: 60px;
-            height: 60px;
-            background-color: white;
+            width: 100px;
+            height: 100px;
+            background-color: transparent;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 0px;
+            margin-bottom: -10px;
         }
 
-        .app-icon i {
-            font-size: 32px;
-            color: var(--primary-color);
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 0px;
         }
 
         .app-info {
@@ -628,7 +632,9 @@
             <div class="download-app-card">
                 <div class="download-app-content">
                     <div class="app-icon">
-                        <i class="bi bi-phone"></i>
+                        <img src="https://sp1453.serpul.co.id/img/asset/header-white-20240203101151.png" 
+                             alt="MDR Pulsa Logo" 
+                             onerror="this.src='https://placehold.co/150x150/e2e8f0/334155?text=App+Logo';">
                     </div>
                     <div class="app-info">
                         <h3>MDR Pulsa V24</h3>
