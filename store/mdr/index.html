@@ -150,6 +150,13 @@
             cursor: pointer;
         }
 
+        /* Logo MDR PULSA di Header */
+        .header-mdr-pulsa-logo {
+            height: 50px;
+            width: auto;
+            object-fit: contain;
+        }
+
         /* Custom Card Style */
         .card {
             border-radius: var(--radius-large);
@@ -477,6 +484,11 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            /* Responsive untuk logo MDR PULSA di header */
+            .header-mdr-pulsa-logo {
+                height: 35px;
+            }
         }
 
         .katalog-product-card .product-wholesale-price {
@@ -620,6 +632,13 @@
     <div class="header-sticky-container sticky-top">
         <header class="header container-fluid p-3 d-flex justify-content-between align-items-center">
             <div class="h-100 w-50 header-logo"></div>
+            <!-- Logo MDR PULSA di sebelah kanan atas -->
+            <div class="d-flex align-items-center justify-content-end" style="width: 50%;">
+                <img src="https://sp1453.serpul.co.id/img/asset/header-white-20240203101151.png" 
+                     alt="MDR PULSA Logo" 
+                     class="header-mdr-pulsa-logo"
+                     onerror="this.src='https://placehold.co/100x40/ffffff/008ca7?text=MDR+PULSA&font=poppins'">
+            </div>
             <!-- Tombol refresh dan chat dihapus -->
         </header>
     </div>
