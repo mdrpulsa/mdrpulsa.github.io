@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Quran Digital - Ayat Tersimpan</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri&display=swap">
+    <style>
+        :root {
+            --primary-color: #008ca7;
+            --secondary-color: #e6f7fa;
+            --accent-color: #005f73;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        @font-face {
+            font-family: 'LPMQ';
+            src: url('https://equran.id/font/LPMQ.ttf') format('truetype');
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding-bottom: 20px;
+        }
+        
+        .font-quran {
+            font-family: 'LPMQ', 'Amiri', serif;
+        }
+        
+        .primary-bg {
+            background-color: var(--primary-color);
+        }
+        
+        .secondary-bg {
+            background-color: var(--secondary-color);
+        }
+        
+        .primary-text {
+            color: var(--primary-color);
+        }
+        
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+        
+        .bookmark-card {
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+        
+        .bookmark-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+        }
+        
+        .back-btn {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .back-btn:hover {
+            color: var(--accent-color);
+            transform: translateX(-5px);
+        }
+        
+        .page-title {
+            color: var(--dark-color);
+            font-weight: 700;
+            margin-bottom: 25px;
+        }
+        
+        .arabic-text {
+            font-size: 1.8rem;
+            text-align: right;
+            line-height: 2.5;
+            margin-bottom: 15px;
+        }
+        
+        .surah-name {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 1.2rem;
+        }
+        
+        .container-custom {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        .delete-btn {
+            color: #dc3545;
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .delete-btn:hover {
+            color: #b02a37;
+            transform: scale(1.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6c757d;
+        }
+        
+        @media (max-width: 576px) {
+            .container-custom {
+                padding: 10px;
+            }
+            
+            .arabic-text {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-custom">
+        <!-- Back Button -->
+        <a href="index.html" class="back-btn" id="backButton">
+            <i class="bi bi-arrow-left me-2"></i> Kembali ke Beranda
+        </a>
+
+        <!-- Title -->
+        <h1 class="page-title">Ayat Tersimpan</h1>
+
+        <!-- Bookmarked Verses Container -->
+        <div id="bookmarkedVerses">
+            <!-- Bookmarked verses will be populated here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="empty-state d-none">
+            <i class="bi bi-bookmark-x" style="font-size: 3rem; color: #dee2e6; margin-bottom: 15px;"></i>
+            <h5 class="text-muted">Belum ada ayat yang tersimpan</h5>
+            <p class="text-muted mt-2">Kunjungi detail surah dan klik ikon bookmark untuk menyimpan ayat favorit Anda</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        function loadBookmarkedVerses() {
+            const bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            const container = document.getElementById('bookmarkedVerses');
+            const emptyState = document.getElementById('emptyState');
+
+            if (bookmarks.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('d-none');
+                return;
+            }
+
+            emptyState.classList.add('d-none');
+            
+            container.innerHTML = bookmarks.map(bookmark => `
+                <div class="bookmark-card p-3" id="bookmark-${bookmark.surahNumber}-${bookmark.verseNumber}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h2 class="surah-name m-0">
+                            ${bookmark.surahName} - Ayat ${bookmark.verseNumber}
+                        </h2>
+                        <button onclick="removeBookmark(${bookmark.surahNumber}, ${bookmark.verseNumber})" 
+                                class="delete-btn">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                    <div class="font-quran arabic-text">
+                        ${bookmark.arabicText}
+                    </div>
+                    <p class="text-muted mb-3">
+                        ${bookmark.translation}
+                    </p>
+                    <a href="surah-detail.html?id=${bookmark.surahNumber}&verse=${bookmark.verseNumber}" 
+                       class="btn btn-primary-custom btn-sm">
+                        <i class="bi bi-book me-1"></i> Buka Surat
+                    </a>
+                </div>
+            `).join('');
+        }
+
+        function removeBookmark(surahNumber, verseNumber) {
+            let bookmarks = JSON.parse(localStorage.getItem('quranBookmarks') || '[]');
+            bookmarks = bookmarks.filter(b => !(b.surahNumber === surahNumber && b.verseNumber === verseNumber));
+            localStorage.setItem('quranBookmarks', JSON.stringify(bookmarks));
+            
+            // Remove with animation
+            const element = document.getElementById(`bookmark-${surahNumber}-${verseNumber}`);
+            element.style.opacity = '0';
+            element.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => {
+                loadBookmarkedVerses();
+            }, 300);
+        }
+
+        // Initial load
+        loadBookmarkedVerses();
+    </script>
+</body>
+</html>
