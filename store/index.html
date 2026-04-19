@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daftar Store & Mitra | MDR Group</title>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f8fafc;
+      color: #1e293b;
+    }
+
+    .navbar-store {
+      background-color: white;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 15px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    .list-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+
+    .store-item {
+      background: white;
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.3s ease;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .store-item:hover {
+      border-color: #10b981;
+      box-shadow: 0 15px 30px -10px rgba(0, 0, 0, 0.08);
+      transform: translateY(-4px);
+    }
+
+    .store-top-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .store-thumbnail-box {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      background-color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 16px;
+      flex-shrink: 0;
+      border: 1px solid #f1f5f9;
+      overflow: hidden;
+      padding: 4px;
+    }
+
+    .store-thumbnail-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .store-title-area {
+      flex-grow: 1;
+    }
+
+    .store-name {
+      font-size: 1.25rem;
+      font-weight: 800;
+      margin-bottom: 0;
+      color: #0f172a;
+    }
+
+    .store-desc {
+      font-size: 0.95rem;
+      color: #64748b;
+      line-height: 1.6;
+      margin-top: 5px;
+      padding-top: 15px;
+      border-top: 1px dashed #f1f5f9;
+    }
+
+    .badge-label {
+      font-size: 0.65rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      display: inline-block;
+      letter-spacing: 0.5px;
+    }
+
+    .bg-main { background-color: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+    .bg-mitra { background-color: #fffbeb; color: #92400e; border: 1px solid #fef3c7; }
+
+    .btn-arrow-circle {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #10b981;
+    }
+
+    .join-box {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: white;
+      border-radius: 24px;
+      padding: 35px;
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    .btn-join {
+      background-color: #10b981;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 14px;
+      font-weight: 700;
+      margin-top: 20px;
+      display: inline-block;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar-store shadow-sm">
+    <div class="container d-flex align-items-center">
+      <!-- MENGGUNAKAN ../ UNTUK KELUAR DARI FOLDER STORE DAN KEMBALI KE BERANDA -->
+      <a href="../index.html" class="btn btn-link p-0 me-3 text-dark">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </a>
+      <h5 class="fw-bold mb-0">Explore Store</h5>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="list-container">
+      
+      <p class="text-secondary small fw-bold text-uppercase mb-3 px-1">Daftar Store & Mitra</p>
+
+      <!-- MENUJU FOLDER mdrstore DI DALAM FOLDER STORE -->
+      <a href="mdrstore/index.html" class="store-item">
+        <div class="store-top-row">
+          <div class="store-thumbnail-box">
+            <img src="https://firebasestorage.googleapis.com/v0/b/mdr-store-45ddc.firebasestorage.app/o/Logo%201%20Transparant.png?alt=media&token=64b0274b-bdee-4592-8a6b-913c4f37fd16" alt="Logo MDR Store">
+          </div>
+          <div class="store-title-area">
+            <span class="badge-label bg-main">Official Store</span>
+            <h4 class="store-name">MDR Store</h4>
+          </div>
+          <div class="btn-arrow-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+        <p class="store-desc">Pusat produk fisik dan aksesoris telekomunikasi utama. Menyediakan berbagai macam pilihan mulai dari Kartu Perdana, Voucher Data, hingga aksesoris pendukung lainnya.</p>
+      </a>
+
+      <!-- MITRA BEE CELL
+      <a href="#" class="store-item">
+        <div class="store-top-row">
+          <div class="store-thumbnail-box">
+            <img src="https://firebasestorage.googleapis.com/v0/b/mdr-store-45ddc.firebasestorage.app/o/Logo%201%20Transparant.png?alt=media&token=64b0274b-bdee-4592-8a6b-913c4f37fd16" alt="Logo Bee Cell">
+          </div>
+          <div class="store-title-area">
+            <span class="badge-label bg-mitra">Mitra MDR Group</span>
+            <h4 class="store-name">Bee Cell</h4>
+          </div>
+          <div class="btn-arrow-circle">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </div>
+        </div>
+        <p class="store-desc">Mitra resmi penyedia kuota dan kebutuhan gadget. Fokus pada pelayanan prima untuk pengisian kuota internet cepat dan penjualan perdana khusus di area jangkauan Bee Cell.</p>
+      </a> -->
+
+      <div class="join-box">
+        <h4 class="fw-bold mb-2 text-white">Ingin buat Toko Online seperti ini?</h4>
+        <p class="text-white-50">Gabung menjadi Mitra MDR Group dan miliki website katalog produk Anda sendiri secara profesional.</p>
+        <a href="https://wa.me/nomor-wa-yoko" class="btn-join">Daftar Jadi Mitra Sekarang</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
