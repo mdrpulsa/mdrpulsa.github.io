@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al-Quran Digital</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri&display=swap">
+    <style>
+        :root {
+            --primary-color: #008ca7;
+            --secondary-color: #e6f7fa;
+            --accent-color: #005f73;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+        
+        @font-face {
+            font-family: 'LPMQ';
+            src: url('https://equran.id/font/LPMQ.ttf') format('truetype');
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding-bottom: 20px;
+        }
+        
+        .font-quran {
+            font-family: 'LPMQ', 'Amiri', serif;
+        }
+        
+        .primary-bg {
+            background-color: var(--primary-color);
+        }
+        
+        .secondary-bg {
+            background-color: var(--secondary-color);
+        }
+        
+        .primary-text {
+            color: var(--primary-color);
+        }
+        
+        .btn-primary-custom {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+        
+        .header-card {
+            border-radius: 15px;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='25' fill='none' stroke='rgba(255,255,255,0.15)' stroke-width='0.5'/%3E%3C/svg%3E");
+            background-size: 30px 30px;
+            opacity: 0.5;
+        }
+        
+        .greeting-text {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        
+        .date-text {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            text-align: center;
+        }
+        
+        .surah-item {
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            background-color: white;
+        }
+        
+        .surah-item:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+            color: inherit;
+        }
+        
+        .surah-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .surah-item:hover .surah-number {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .surah-name-arabic {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .surah-name-latin {
+            font-weight: 600;
+            color: var(--dark-color);
+            margin-bottom: 3px;
+        }
+        
+        .surah-translation {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 3px;
+        }
+        
+        .surah-info {
+            color: var(--primary-color);
+            font-size: 0.85rem;
+        }
+        
+        .page-title {
+            color: var(--dark-color);
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .bookmark-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .bookmark-link:hover {
+            color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+        
+        .search-box {
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            padding: 10px 20px 10px 45px;
+            width: 100%;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 140, 167, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 12px;
+            color: #999;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 30px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .container-custom {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+        
+        @media (max-width: 576px) {
+            .container-custom {
+                padding: 10px;
+            }
+            
+            .header-card {
+                padding: 15px;
+            }
+            
+            .greeting-text {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-custom">
+        <!-- Header Card -->
+        <div class="header-card">
+            <div class="position-relative z-1">
+                <h1 class="greeting-text font-quran">السَّلاَمُ عَلَيْكُمْ وَرَحْمَةُ اللهِ وَبَرَكَاتُهُ</h1>
+                <p class="date-text" id="current-date"></p>
+            </div>
+        </div>
+
+        <!-- Title and Bookmark -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="page-title m-0">Daftar Surat</h2>
+            <a href="bookmark.html" class="bookmark-link">
+                <i class="bi bi-bookmark-check me-1"></i> Ayat Tersimpan
+            </a>
+        </div>
+
+        <!-- Search Box -->
+        <div class="position-relative">
+            <i class="bi bi-search search-icon"></i>
+            <input type="text" id="searchInput" class="search-box" placeholder="Cari surat atau ayat...">
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center">
+            <div class="loading-spinner"></div>
+            <p class="text-muted mt-2">Memuat daftar surah...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="errorState" class="alert alert-danger text-center d-none">
+            <p class="mb-2">Gagal memuat data. Silakan coba lagi.</p>
+            <button onclick="fetchSurahList()" class="btn btn-primary-custom btn-sm">Coba lagi</button>
+        </div>
+
+        <!-- Surah List -->
+        <div id="surahList" class="d-none">
+            <!-- Surah items will be populated here -->
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Set current date in Indonesian
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        document.getElementById('current-date').textContent = new Date().toLocaleDateString('id-ID', options);
+
+        const surahList = document.getElementById('surahList');
+        const loadingState = document.getElementById('loadingState');
+        const errorState = document.getElementById('errorState');
+        const searchInput = document.getElementById('searchInput');
+        let allSurahs = [];
+
+        async function fetchSurahList() {
+            try {
+                loadingState.classList.remove('d-none');
+                errorState.classList.add('d-none');
+                surahList.classList.add('d-none');
+                surahList.innerHTML = '';
+
+                const response = await fetch('https://equran.id/api/v2/surat');
+                const data = await response.json();
+                
+                if (!response.ok) throw new Error('Failed to fetch');
+                
+                allSurahs = data.data;
+                renderSurahs(allSurahs);
+                
+                loadingState.classList.add('d-none');
+                surahList.classList.remove('d-none');
+            } catch (error) {
+                console.error('Error fetching surah list:', error);
+                loadingState.classList.add('d-none');
+                errorState.classList.remove('d-none');
+            }
+        }
+
+        function renderSurahs(surahs) {
+            surahList.innerHTML = surahs.map(surah => `
+                <a href="surah-detail.html?id=${surah.nomor}" class="surah-item p-3">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="surah-number">
+                                ${surah.nomor}
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="surah-name-latin">${surah.namaLatin}</div>
+                            <div class="surah-translation">${surah.arti}</div>
+                            <div class="surah-info">${surah.tempatTurun}</div>
+                        </div>
+                        <div class="col-auto text-end">
+                            <div class="font-quran surah-name-arabic">${surah.nama}</div>
+                            <div class="surah-info">${surah.jumlahAyat} ayat</div>
+                        </div>
+                    </div>
+                </a>
+            `).join('');
+        }
+
+        // Search functionality
+        searchInput.addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filteredSurahs = allSurahs.filter(surah => 
+                surah.namaLatin.toLowerCase().includes(searchTerm) ||
+                surah.arti.toLowerCase().includes(searchTerm) ||
+                surah.nama.includes(searchTerm)
+            );
+            renderSurahs(filteredSurahs);
+        });
+
+        // Initial fetch
+        fetchSurahList();
+    </script>
+</body>
+</html>
