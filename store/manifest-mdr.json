@@ -4,7 +4,7 @@
   "start_url": "/store/mdrstore.html",
   "scope": "/store/",
   "display": "standalone",
-  "theme_color": "#10b981",
+  "theme_color": "#008ca7",
   "background_color": "#ffffff",
   "icons": [
     {
