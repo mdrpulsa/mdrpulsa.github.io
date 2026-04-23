@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kasir MDR</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Day.js -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <!-- SheetJS (XLSX) -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <!-- html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #0d6efd;
+            --primary-light: #6ea8fe;
+            --primary-dark: #0a58ca;
+            --bg-body: #f4f6f9;
+            --card-bg: #ffffff;
+            --text-main: #212529;
+            --border-light: rgba(0,0,0,0.05);
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.04);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.08);
+            --warning-bg: #fff3cd;
+            --warning-border: #ffecb5;
+            --warning-text: #856404;
+        }
+        [data-bs-theme="dark"] {
+            --bg-body: #1e1e2f;
+            --card-bg: #2a2a3c;
+            --text-main: #e9ecef;
+            --border-light: rgba(255,255,255,0.05);
+            --shadow-sm: 0 4px 6px rgba(0,0,0,0.2);
+            --shadow-md: 0 8px 24px rgba(0,0,0,0.3);
+            --warning-bg: #3d3522;
+            --warning-border: #5a4e2f;
+            --warning-text: #ffd970;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+            padding-bottom: 2rem;
+            transition: background 0.2s ease;
+        }
+        .header-card {
+            background: linear-gradient(145deg, #0b5e7c, #0a7a9c);
+            color: white;
+            border-radius: 24px;
+            padding: 1.8rem;
+            box-shadow: var(--shadow-md);
+            border: none;
+        }
+        .card-custom {
+            background: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+            backdrop-filter: blur(4px);
+        }
+        .product-card {
+            cursor: pointer;
+            border-radius: 16px;
+            transition: all 0.15s;
+            border: 1px solid var(--border-light);
+            background: var(--card-bg);
+        }
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-light);
+        }
+        .nav-tabs .nav-link {
+            border: none;
+            font-weight: 500;
+            color: var(--text-main);
+            opacity: 0.7;
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px 30px 0 0;
+        }
+        .nav-tabs .nav-link.active {
+            background: var(--card-bg);
+            color: var(--primary);
+            opacity: 1;
+            font-weight: 600;
+        }
+        .btn-primary {
+            background: var(--primary);
+            border: none;
+        }
+        .btn-outline-primary {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+        .btn-outline-primary:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .cart-item-row {
+            border-bottom: 1px dashed var(--border-light);
+            padding: 0.8rem 0;
+        }
+        .marquee-wrapper {
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: 40px;
+            padding: 0.5rem 1rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+            color: var(--warning-text);
+            font-size: 0.9rem;
+        }
+        .marquee-content i {
+            margin-right: 8px;
+        }
+        .marquee-wrapper:hover .marquee-content {
+            animation-play-state: paused;
+        }
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .receipt-preview {
+            background: white;
+            color: #212529;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 350px;
+            margin: 0 auto;
+            font-family: 'Courier New', monospace;
+        }
+        [data-bs-theme="dark"] .receipt-preview {
+            background: #f8f9fa;
+        }
+        #receiptCaptureArea {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            color: #000;
+        }
+        .kas-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        .kas-item:last-child {
+            border-bottom: none;
+        }
+        .btn-saldo {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            border-radius: 8px;
+            padding: 0.4rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .btn-saldo:hover {
+            background: var(--primary);
+            color: white;
+        }
+        [data-bs-theme="dark"] .btn-saldo {
+            color: var(--primary-light);
+            border-color: var(--primary-light);
+        }
+        [data-bs-theme="dark"] .btn-saldo:hover {
+            background: var(--primary-light);
+            color: #1e1e2f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+    <!-- HEADER -->
+    <div class="header-card mb-4">
+        <div>
+            <h1 class="display-6 fw-bold mb-1" id="header-store-name">Kasir MDR</h1>
+            <p class="mb-0 opacity-75"><i class="bi bi-shop me-2"></i>Point of Sale · Penyimpanan Lokal</p>
+        </div>
+    </div>
+
+    <!-- NOTIFIKASI BERJALAN -->
+    <div class="marquee-wrapper">
+        <div class="marquee-content">
+            <i class="bi bi-info-circle-fill"></i> 💾 Data disimpan di penyimpanan lokal browser Anda. 
+            <i class="bi bi-shield-exclamation"></i> Data TIDAK otomatis tersimpan di server. 
+            <i class="bi bi-download"></i> Untuk keamanan, lakukan <strong>Ekspor Data (Excel/PDF)</strong> secara berkala sebagai cadangan. 
+            <i class="bi bi-exclamation-triangle"></i> Reset data akan menghapus semua data secara permanen.    •   
+            <i class="bi bi-info-circle-fill"></i> 💾 Data disimpan di penyimpanan lokal browser Anda. 
+            <i class="bi bi-shield-exclamation"></i> Data TIDAK otomatis tersimpan di server. 
+            <i class="bi bi-download"></i> Untuk keamanan, lakukan <strong>Ekspor Data (Excel/PDF)</strong> secara berkala sebagai cadangan. 
+            <i class="bi bi-exclamation-triangle"></i> Reset data akan menghapus semua data secara permanen.
+        </div>
+    </div>
+
+    <!-- SALDO KAS RINGKAS -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0"><i class="bi bi-wallet2 me-2"></i>Saldo Kas</h5>
+        <button class="btn-saldo" id="btn-edit-saldo"><i class="bi bi-pencil-square me-1"></i>Atur Saldo Kas</button>
+    </div>
+    <div class="row g-3 mb-4" id="kasContainer">
+        <!-- Kas cards akan dirender dinamis -->
+    </div>
+
+    <!-- TABS NAVIGASI -->
+    <ul class="nav nav-tabs mb-0" id="mainTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-kasir"><i class="bi bi-cart3 me-1"></i>Kasir</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-produk"><i class="bi bi-box me-1"></i>Produk</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-laporan"><i class="bi bi-bar-chart me-1"></i>Laporan</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-pengaturan"><i class="bi bi-gear me-1"></i>Pengaturan</button></li>
+    </ul>
+
+    <!-- TAB CONTENT -->
+    <div class="tab-content">
+        <!-- KASIR -->
+        <div class="tab-pane fade show active" id="tab-kasir">
+            <div class="card-custom p-3 p-md-4 rounded-top-0">
+                <div class="row g-4">
+                    <div class="col-lg-7">
+                        <div class="d-flex align-items-center mb-3"><h5 class="mb-0"><i class="bi bi-grid-3x3-gap-fill me-2"></i>Katalog</h5></div>
+                        <input type="text" id="searchInput" class="form-control form-control-lg rounded-pill mb-3" placeholder="Cari produk...">
+                        <div id="productGrid" class="row row-cols-2 row-cols-sm-3 g-3" style="max-height: 480px; overflow-y: auto;"></div>
+                    </div>
+                    <div class="col-lg-5">
+                        <div class="bg-light bg-opacity-25 p-3 rounded-4 h-100 d-flex flex-column" style="background: var(--card-bg);">
+                            <h5 class="mb-3"><i class="bi bi-basket me-2"></i>Keranjang</h5>
+                            <div id="cartContainer" class="flex-grow-1" style="min-height:200px; max-height:320px; overflow-y: auto;"></div>
+                            <div class="mt-3 pt-3 border-top">
+                                <div class="d-flex justify-content-between fw-bold fs-5 mb-3"><span>Total</span> <span id="cartTotalAmount">Rp0</span></div>
+                                <input type="text" id="customerName" class="form-control form-control-sm mb-2" placeholder="Nama pelanggan" value="Umum">
+                                <select id="paymentMethod" class="form-select form-select-sm mb-2">
+                                    <option value="Tunai">Tunai</option><option value="Transfer">Transfer</option><option value="Hutang">Hutang</option><option value="Bayar Sebagian">Bayar Sebagian</option>
+                                </select>
+                                <div id="partialAmountWrapper" class="mb-2 d-none">
+                                    <input type="number" id="partialAmount" class="form-control form-control-sm" placeholder="Jumlah dibayar">
+                                </div>
+                                <select id="kasTujuan" class="form-select form-select-sm mb-2">
+                                    <!-- Opsi kas dinamis -->
+                                </select>
+                                <button id="btnProcess" class="btn btn-primary w-100 mb-2" disabled><i class="bi bi-check-lg"></i> Proses</button>
+                                <button id="btnClearCart" class="btn btn-outline-secondary w-100">Kosongkan</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- PRODUK -->
+        <div class="tab-pane fade" id="tab-produk">
+            <div class="card-custom p-3 p-md-4 rounded-top-0">
+                <div class="d-flex justify-content-between mb-3"><h5>Daftar Produk</h5><button class="btn btn-primary btn-sm" id="btnAddProduct"><i class="bi bi-plus-lg"></i> Tambah</button></div>
+                <div class="table-responsive">
+                    <table class="table table-custom align-middle">
+                        <thead><tr><th>Nama</th><th>Harga Beli</th><th>Harga Jual</th><th>Margin</th><th></th></tr></thead>
+                        <tbody id="productTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- LAPORAN -->
+        <div class="tab-pane fade" id="tab-laporan">
+            <div class="card-custom p-3 p-md-4 rounded-top-0">
+                <div class="d-flex gap-2 mb-3">
+                    <button class="btn btn-sm btn-outline-primary filter-btn active" data-filter="all">Semua</button>
+                    <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="lunas">Lunas</button>
+                    <button class="btn btn-sm btn-outline-primary filter-btn" data-filter="hutang">Berhutang</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead><tr><th>Waktu</th><th>Pelanggan</th><th>Total</th><th>Status</th><th></th></tr></thead>
+                        <tbody id="transactionTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- PENGATURAN -->
+        <div class="tab-pane fade" id="tab-pengaturan">
+            <div class="card-custom p-3 p-md-4 rounded-top-0">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Identitas Toko</h5>
+                        <form id="settingsForm">
+                            <div class="mb-2"><label>Nama Toko</label><input type="text" id="settingStoreName" class="form-control"></div>
+                            <div class="mb-2"><label>Alamat/Kontak</label><input type="text" id="settingStoreContact" class="form-control"></div>
+                            <div class="mb-2"><label>Pesan Struk</label><textarea id="settingReceiptMsg" class="form-control" rows="2"></textarea></div>
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Preferensi</h5>
+                        <div class="form-check form-switch mb-4"><input class="form-check-input" type="checkbox" id="darkModeToggle"><label class="form-check-label">Mode Gelap</label></div>
+                        <h5>Backup Data</h5>
+                        <div class="alert alert-info small py-2 mb-3">
+                            <i class="bi bi-info-circle"></i> Ekspor data secara berkala untuk cadangan.
+                        </div>
+                        <button class="btn btn-outline-success w-100 mb-2" id="exportExcelBtn"><i class="bi bi-file-excel"></i> Ekspor ke Excel (XLSX)</button>
+                        <button class="btn btn-outline-danger w-100 mb-2" id="exportPdfBtn"><i class="bi bi-file-pdf"></i> Ekspor ke PDF</button>
+                        <hr>
+                        <h5>Manajemen Kas</h5>
+                        <button class="btn btn-outline-primary w-100 mb-2" id="manageKasBtn"><i class="bi bi-plus-circle"></i> Kelola Jenis Kas</button>
+                        <hr>
+                        <button class="btn btn-outline-danger w-100" id="resetDataBtn"><i class="bi bi-exclamation-triangle"></i> Reset Semua Data</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: PRODUK -->
+<div class="modal fade" id="productModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Produk</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body"><form id="productForm"><input type="hidden" id="editProductId"><div class="mb-3"><label>Nama</label><input id="productName" class="form-control" required></div><div class="mb-3"><label>Harga Beli</label><input type="number" id="productBuy" class="form-control" required></div><div class="mb-3"><label>Harga Jual</label><input type="number" id="productSell" class="form-control" required></div></form></div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" form="productForm" class="btn btn-primary">Simpan</button></div></div></div>
+</div>
+
+<!-- MODAL: ATUR SALDO KAS -->
+<div class="modal fade" id="kasModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>Atur Saldo Kas</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <form id="kasForm">
+            <div id="kasInputsContainer"></div>
+        </form>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button type="submit" form="kasForm" class="btn btn-primary">Simpan</button></div></div></div>
+</div>
+
+<!-- MODAL: KELOLA JENIS KAS -->
+<div class="modal fade" id="manageKasModal" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5>Kelola Jenis Kas</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+        <div class="mb-3">
+            <label class="form-label">Tambah Jenis Kas Baru</label>
+            <div class="input-group">
+                <input type="text" id="newKasName" class="form-control" placeholder="Nama kas (contoh: Gopay, ShopeePay)">
+                <button class="btn btn-primary" id="addKasTypeBtn"><i class="bi bi-plus"></i> Tambah</button>
+            </div>
+            <small class="text-muted">Kas Tunai, Bank, dan E-Wallet adalah default dan tidak bisa dihapus.</small>
+        </div>
+        <hr>
+        <h6>Daftar Jenis Kas</h6>
+        <div id="kasTypeList"></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button></div></div></div>
+</div>
+
+<!-- MODAL: DETAIL / STRUK -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5>Detail Transaksi</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body" id="receiptContent"></div><div class="modal-footer"><button class="btn btn-success" id="shareImageBtn"><i class="bi bi-camera"></i> Bagikan Gambar</button><button class="btn btn-outline-secondary" id="downloadImageBtn"><i class="bi bi-download"></i> Unduh PNG</button></div></div></div>
+</div>
+
+<!-- TERSEMBUNYI: Area untuk capture struk -->
+<div id="receiptCaptureArea" style="position: absolute; left: -9999px; width: 350px; background: white; padding: 20px; border-radius: 8px; font-family: monospace;"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    (function(){
+        "use strict";
+        // ---------- STATE ----------
+        let products = [];
+        let transactions = [];
+        let kasTypes = ['Tunai', 'Bank', 'E-Wallet'];
+        let kas = { Tunai:0, Bank:0, 'E-Wallet':0 };
+        let cart = [];
+        let settings = { storeName:'Kasir MDR', storeContact:'', receiptMessage:'Terima kasih.', darkMode:false };
+        const defaultSettings = { ...settings };
+        let currentTxId = null;
+
+        // Modals
+        const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+        const kasModal = new bootstrap.Modal(document.getElementById('kasModal'));
+        const manageKasModal = new bootstrap.Modal(document.getElementById('manageKasModal'));
+        const receiptModal = new bootstrap.Modal(document.getElementById('receiptModal'));
+
+        // Helpers
+        const formatRp = (v) => new Intl.NumberFormat('id-ID',{style:'currency',currency:'IDR',minimumFractionDigits:0}).format(v);
+        const genId = () => Date.now()+'-'+Math.random().toString(36).substr(2,9);
+        
+        // Ikon untuk kas
+        const getKasIcon = (name) => {
+            const lower = name.toLowerCase();
+            if (lower.includes('tunai') || lower.includes('cash')) return 'bi-cash-stack text-success';
+            if (lower.includes('bank') || lower.includes('transfer')) return 'bi-bank text-primary';
+            if (lower.includes('wallet') || lower.includes('gopay') || lower.includes('ovo') || lower.includes('dana') || lower.includes('shopee')) return 'bi-phone text-warning';
+            return 'bi-coin text-info';
+        };
+
+        // Storage
+        function loadAll(){
+            products = JSON.parse(localStorage.getItem('mdr_products')) || [];
+            transactions = JSON.parse(localStorage.getItem('mdr_transactions')) || [];
+            const savedKasTypes = JSON.parse(localStorage.getItem('mdr_kasTypes'));
+            if (savedKasTypes && savedKasTypes.length) kasTypes = savedKasTypes;
+            const savedKas = JSON.parse(localStorage.getItem('mdr_kas')) || {};
+            kasTypes.forEach(t => { if (savedKas[t] === undefined) savedKas[t] = 0; });
+            kas = savedKas;
+            settings = {...defaultSettings, ...JSON.parse(localStorage.getItem('mdr_settings'))};
+        }
+        function saveAll(){
+            localStorage.setItem('mdr_products', JSON.stringify(products));
+            localStorage.setItem('mdr_transactions', JSON.stringify(transactions));
+            localStorage.setItem('mdr_kasTypes', JSON.stringify(kasTypes));
+            localStorage.setItem('mdr_kas', JSON.stringify(kas));
+            localStorage.setItem('mdr_settings', JSON.stringify(settings));
+        }
+
+        // Render Kas Cards
+        function renderKasCards(){
+            const container = document.getElementById('kasContainer');
+            const cols = kasTypes.map(t => {
+                const iconClass = getKasIcon(t);
+                return `<div class="col-md-4"><div class="card-custom p-3 d-flex align-items-center kas-card"><i class="bi ${iconClass} fs-1 me-3"></i><div><small class="text-secondary">Kas ${t}</small><h4 class="mb-0 fw-bold">${formatRp(kas[t] || 0)}</h4></div></div></div>`;
+            }).join('');
+            container.innerHTML = cols || '<div class="col-12"><p class="text-muted">Belum ada kas. Tambahkan di Pengaturan > Kelola Jenis Kas.</p></div>';
+            
+            const select = document.getElementById('kasTujuan');
+            select.innerHTML = kasTypes.map(t => `<option value="${t}">Masuk ${t}</option>`).join('');
+        }
+
+        function renderProductsGrid(){
+            const grid = document.getElementById('productGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = products.filter(p=>p.name.toLowerCase().includes(search));
+            grid.innerHTML = filtered.map(p=>`
+                <div class="col"><div class="product-card p-3 text-center" data-id="${p.id}"><h6>${p.name}</h6><span class="fw-bold text-primary">${formatRp(p.sellingPrice)}</span></div></div>
+            `).join('');
+        }
+        function renderProductTable(){
+            const tbody = document.getElementById('productTableBody');
+            tbody.innerHTML = products.map(p=>`<tr><td>${p.name}</td><td>${formatRp(p.purchasePrice)}</td><td>${formatRp(p.sellingPrice)}</td><td>${formatRp(p.sellingPrice-p.purchasePrice)}</td><td class="text-end"><button class="btn btn-sm btn-outline-warning edit-product" data-id="${p.id}"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger delete-product ms-1" data-id="${p.id}"><i class="bi bi-trash"></i></button></td></tr>`).join('');
+        }
+        function renderCart(){
+            const container = document.getElementById('cartContainer');
+            const totalSpan = document.getElementById('cartTotalAmount');
+            const btnProcess = document.getElementById('btnProcess');
+            if(!cart.length){
+                container.innerHTML = `<div class="text-center text-muted py-4">Keranjang kosong</div>`;
+                totalSpan.innerText = formatRp(0);
+                btnProcess.disabled = true;
+                return;
+            }
+            let total = 0;
+            container.innerHTML = cart.map(item=>{
+                const subtotal = item.sellingPrice * item.quantity;
+                total += subtotal;
+                return `<div class="cart-item-row d-flex justify-content-between align-items-center"><div><span class="fw-medium">${item.name}</span><br><small>${formatRp(item.sellingPrice)} x ${item.quantity}</small></div><div><button class="btn btn-sm btn-outline-secondary qty-btn me-1" data-id="${item.id}" data-delta="-1">−</button><span class="mx-1">${item.quantity}</span><button class="btn btn-sm btn-outline-secondary qty-btn ms-1" data-id="${item.id}" data-delta="1">+</button><button class="btn btn-sm btn-link text-danger remove-cart-item ms-2" data-id="${item.id}"><i class="bi bi-x"></i></button></div></div>`;
+            }).join('');
+            totalSpan.innerText = formatRp(total);
+            btnProcess.disabled = false;
+        }
+        function renderTransactions(){
+            const tbody = document.getElementById('transactionTableBody');
+            const activeFilter = document.querySelector('.filter-btn.active')?.dataset.filter || 'all';
+            let filtered = [...transactions];
+            if(activeFilter==='lunas') filtered = filtered.filter(t=>t.paymentStatus==='Lunas');
+            if(activeFilter==='hutang') filtered = filtered.filter(t=>t.paymentStatus!=='Lunas');
+            filtered.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+            tbody.innerHTML = filtered.map(tx=>{
+                let badge='';
+                if(tx.paymentStatus==='Lunas') badge='<span class="badge bg-success">Lunas</span>';
+                else if(tx.paymentStatus==='Hutang') badge='<span class="badge bg-danger">Hutang</span>';
+                else badge='<span class="badge bg-warning text-dark">Belum Lunas</span>';
+                return `<tr><td>${dayjs(tx.timestamp).format('DD/MM/YY HH:mm')}</td><td>${tx.customerName}</td><td>${formatRp(tx.totalAmount)}</td><td>${badge}</td><td><button class="btn btn-sm btn-outline-primary view-detail" data-id="${tx.id}"><i class="bi bi-eye"></i></button></td></tr>`;
+            }).join('');
+        }
+        function applyTheme(){ document.documentElement.dataset.bsTheme = settings.darkMode?'dark':'light'; }
+        function renderSettings(){
+            document.getElementById('header-store-name').innerText = settings.storeName;
+            document.getElementById('settingStoreName').value = settings.storeName;
+            document.getElementById('settingStoreContact').value = settings.storeContact;
+            document.getElementById('settingReceiptMsg').value = settings.receiptMessage;
+            document.getElementById('darkModeToggle').checked = settings.darkMode;
+            applyTheme();
+        }
+        function fullRender(){
+            renderKasCards();
+            renderProductsGrid(); 
+            renderProductTable(); 
+            renderCart(); 
+            renderTransactions(); 
+            renderSettings();
+        }
+
+        function addToCart(productId){
+            const product = products.find(p=>p.id===productId);
+            if(!product) return;
+            const existing = cart.find(i=>i.id===productId);
+            if(existing) existing.quantity++;
+            else cart.push({...product, quantity:1});
+            renderCart();
+        }
+        function processTransaction(){
+            if(!cart.length) return;
+            const total = cart.reduce((s,i)=>s+(i.sellingPrice*i.quantity),0);
+            const method = document.getElementById('paymentMethod').value;
+            const customer = document.getElementById('customerName').value.trim()||'Umum';
+            let amountPaid = 0, status = 'Hutang', kasTujuan = document.getElementById('kasTujuan').value;
+            if(method==='Tunai'||method==='Transfer'){ amountPaid = total; status='Lunas'; }
+            else if(method==='Hutang'){ amountPaid=0; status='Hutang'; }
+            else if(method==='Bayar Sebagian'){
+                amountPaid = parseFloat(document.getElementById('partialAmount').value)||0;
+                if(amountPaid>=total){ amountPaid=total; status='Lunas'; }
+                else if(amountPaid>0) status='Belum Lunas'; else status='Hutang';
+            }
+            const tx = {
+                id: genId(), timestamp: new Date().toISOString(), customerName: customer, items: cart.map(i=>({...i})),
+                totalAmount: total, amountPaid, remainingBalance: total-amountPaid, paymentMethod: method,
+                paymentStatus: status, paymentHistory: []
+            };
+            if(amountPaid>0){
+                tx.paymentHistory.push({date: new Date().toISOString(), amount: amountPaid, kas: kasTujuan});
+                kas[kasTujuan] = (kas[kasTujuan] || 0) + amountPaid;
+            }
+            transactions.push(tx);
+            cart = [];
+            saveAll();
+            fullRender();
+            document.getElementById('partialAmount').value='';
+        }
+        function generateReceiptHTML(tx){
+            let itemsHtml = tx.items.map(i=>`<div style="display:flex;justify-content:space-between;"><span>${i.name} x${i.quantity}</span><span>${formatRp(i.sellingPrice*i.quantity)}</span></div>`).join('');
+            return `
+                <div style="text-align:center; margin-bottom:15px;">
+                    <h3 style="margin:0;">${settings.storeName}</h3>
+                    <p style="margin:2px; font-size:12px;">${settings.storeContact}</p>
+                    <hr style="border-top:1px dashed #ccc;">
+                </div>
+                <p style="margin:5px 0;"><strong>${tx.customerName}</strong> · ${dayjs(tx.timestamp).format('DD MMM YYYY HH:mm')}</p>
+                <hr style="border-top:1px dashed #ccc;">
+                ${itemsHtml}
+                <hr style="border-top:1px dashed #ccc;">
+                <div style="display:flex;justify-content:space-between;font-weight:bold;"><span>TOTAL</span><span>${formatRp(tx.totalAmount)}</span></div>
+                <div style="display:flex;justify-content:space-between;"><span>Dibayar</span><span>${formatRp(tx.amountPaid)}</span></div>
+                <div style="display:flex;justify-content:space-between;color:red;"><span>Sisa</span><span>${formatRp(tx.remainingBalance)}</span></div>
+                <hr style="border-top:1px dashed #ccc;">
+                <p style="text-align:center; font-style:italic;">${settings.receiptMessage}</p>
+            `;
+        }
+        function showReceipt(txId){
+            const tx = transactions.find(t=>t.id===txId); if(!tx) return;
+            currentTxId = txId;
+            const content = document.getElementById('receiptContent');
+            let itemsHtml = tx.items.map(i=>`<div class="d-flex justify-content-between"><span>${i.name} x${i.quantity}</span><span>${formatRp(i.sellingPrice*i.quantity)}</span></div>`).join('');
+            let historyHtml = tx.paymentHistory.map(h=>`<div class="small text-secondary"><i class="bi bi-clock"></i> ${dayjs(h.date).format('DD/MM HH:mm')} +${formatRp(h.amount)} (${h.kas})</div>`).join('');
+            let bayarHutangHtml = '';
+            if(tx.paymentStatus!=='Lunas'){
+                bayarHutangHtml = `<hr><h6>Bayar Hutang</h6><div class="input-group mb-2"><input type="number" id="payAmount" class="form-control" placeholder="Jumlah"><select id="payKas" class="form-select">${kasTypes.map(t=>`<option>${t}</option>`).join('')}</select></div>
+                <button class="btn btn-sm btn-primary w-100" id="btnAddPayment" data-id="${tx.id}">Tambah Pembayaran</button><button class="btn btn-sm btn-success w-100 mt-2" id="btnMarkLunas" data-id="${tx.id}">Tandai Lunas</button>`;
+            }
+            content.innerHTML = `
+                <div class="receipt-preview">
+                    <div style="text-align:center;"><strong>${settings.storeName}</strong><br><small>${settings.storeContact}</small></div>
+                    <hr>
+                    <p><strong>${tx.customerName}</strong> · ${dayjs(tx.timestamp).format('DD MMM YYYY HH:mm')}</p>
+                    ${itemsHtml}<hr><div class="d-flex justify-content-between fw-bold"><span>Total</span><span>${formatRp(tx.totalAmount)}</span></div>
+                    <div class="d-flex justify-content-between"><span>Dibayar</span><span>${formatRp(tx.amountPaid)}</span></div>
+                    <div class="d-flex justify-content-between text-danger"><span>Sisa</span><span>${formatRp(tx.remainingBalance)}</span></div>
+                    ${historyHtml} ${bayarHutangHtml}
+                    <hr><p class="text-center fst-italic small">${settings.receiptMessage}</p>
+                </div>
+            `;
+            receiptModal.show();
+        }
+        async function captureReceiptAsImage(tx){
+            const captureDiv = document.getElementById('receiptCaptureArea');
+            captureDiv.innerHTML = generateReceiptHTML(tx);
+            try {
+                const canvas = await html2canvas(captureDiv, { scale: 2, backgroundColor: '#ffffff' });
+                return canvas.toDataURL('image/png');
+            } catch (e) {
+                alert('Gagal membuat gambar struk');
+                return null;
+            }
+        }
+        async function shareReceiptImage(txId){
+            const tx = transactions.find(t=>t.id===txId); if(!tx) return;
+            const imgData = await captureReceiptAsImage(tx);
+            if(!imgData) return;
+            const blob = await (await fetch(imgData)).blob();
+            const file = new File([blob], `struk_${txId.slice(-6)}.png`, {type:'image/png'});
+            if(navigator.share){
+                try{ await navigator.share({files:[file], title:'Struk', text:'Struk transaksi'}); }catch(e){}
+            } else {
+                const a = document.createElement('a'); a.href = imgData; a.download = `struk_${txId.slice(-6)}.png`; a.click();
+            }
+        }
+        async function downloadReceiptImage(txId){
+            const tx = transactions.find(t=>t.id===txId); if(!tx) return;
+            const imgData = await captureReceiptAsImage(tx);
+            if(!imgData) return;
+            const a = document.createElement('a'); a.href = imgData; a.download = `struk_${txId.slice(-6)}.png`; a.click();
+        }
+
+        function exportToExcel(){
+            const wb = XLSX.utils.book_new();
+            const productData = products.map(p=>({Nama:p.name,'Harga Beli':p.purchasePrice,'Harga Jual':p.sellingPrice,Margin:p.sellingPrice-p.purchasePrice}));
+            const wsProd = XLSX.utils.json_to_sheet(productData); XLSX.utils.book_append_sheet(wb, wsProd, 'Produk');
+            const txData = transactions.map(t=>({Tanggal:dayjs(t.timestamp).format('DD/MM/YYYY HH:mm'),Pelanggan:t.customerName,Total:t.totalAmount,Dibayar:t.amountPaid,Sisa:t.remainingBalance,Status:t.paymentStatus}));
+            const wsTx = XLSX.utils.json_to_sheet(txData); XLSX.utils.book_append_sheet(wb, wsTx, 'Transaksi');
+            XLSX.writeFile(wb, `mdr_backup_${dayjs().format('YYYYMMDD')}.xlsx`);
+        }
+        function exportToPDF(){
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            doc.setFontSize(16); doc.text(settings.storeName, 14, 20);
+            doc.setFontSize(10); doc.text(`Laporan per ${dayjs().format('DD MMM YYYY')}`, 14, 28);
+            doc.autoTable({ startY:35, head:[['Nama','Harga Beli','Harga Jual','Margin']], body: products.map(p=>[p.name, formatRp(p.purchasePrice), formatRp(p.sellingPrice), formatRp(p.sellingPrice-p.purchasePrice)]) });
+            doc.autoTable({ startY: doc.lastAutoTable.finalY+10, head:[['Tanggal','Pelanggan','Total','Status']], body: transactions.slice(-20).map(t=>[dayjs(t.timestamp).format('DD/MM HH:mm'), t.customerName, formatRp(t.totalAmount), t.paymentStatus]) });
+            doc.save(`mdr_laporan_${dayjs().format('YYYYMMDD')}.pdf`);
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded',()=>{
+            loadAll(); 
+            fullRender();
+
+            document.getElementById('productGrid').addEventListener('click',e=>{ const card = e.target.closest('.product-card'); if(card) addToCart(card.dataset.id); });
+            document.getElementById('cartContainer').addEventListener('click',e=>{
+                const btn = e.target.closest('button'); if(!btn) return; const id = btn.dataset.id;
+                if(btn.classList.contains('qty-btn')){ const item = cart.find(i=>i.id===id); if(item){ item.quantity += parseInt(btn.dataset.delta); if(item.quantity<=0) cart = cart.filter(i=>i.id!==id); } renderCart(); }
+                else if(btn.classList.contains('remove-cart-item')){ cart = cart.filter(i=>i.id!==id); renderCart(); }
+            });
+            document.getElementById('paymentMethod').addEventListener('change',e=>{
+                document.getElementById('partialAmountWrapper').classList.toggle('d-none', e.target.value!=='Bayar Sebagian');
+            });
+            document.getElementById('btnProcess').addEventListener('click', processTransaction);
+            document.getElementById('btnClearCart').addEventListener('click',()=>{ cart=[]; renderCart(); });
+            document.getElementById('searchInput').addEventListener('input', renderProductsGrid);
+            
+            document.getElementById('btnAddProduct').addEventListener('click',()=>{
+                document.getElementById('productForm').reset(); document.getElementById('editProductId').value='';
+                productModal.show();
+            });
+            document.getElementById('productForm').addEventListener('submit',e=>{
+                e.preventDefault();
+                const id = document.getElementById('editProductId').value;
+                const newProd = { id: id || genId(), name: document.getElementById('productName').value, purchasePrice: +document.getElementById('productBuy').value, sellingPrice: +document.getElementById('productSell').value };
+                if(id) products = products.map(p=>p.id===id?newProd:p); else products.push(newProd);
+                saveAll(); fullRender(); productModal.hide();
+            });
+            document.getElementById('productTableBody').addEventListener('click',e=>{
+                const target = e.target.closest('button'); if(!target) return; const id = target.dataset.id;
+                if(target.classList.contains('edit-product')){
+                    const p = products.find(p=>p.id===id); if(p){
+                        document.getElementById('editProductId').value=p.id; document.getElementById('productName').value=p.name;
+                        document.getElementById('productBuy').value=p.purchasePrice; document.getElementById('productSell').value=p.sellingPrice;
+                        productModal.show();
+                    }
+                }else if(target.classList.contains('delete-product')){ if(confirm('Hapus?')){ products = products.filter(p=>p.id!==id); saveAll(); fullRender(); } }
+            });
+
+            document.querySelectorAll('.filter-btn').forEach(b=>b.addEventListener('click',function(){ document.querySelectorAll('.filter-btn').forEach(x=>x.classList.remove('active')); this.classList.add('active'); renderTransactions(); }));
+            document.getElementById('transactionTableBody').addEventListener('click',e=>{ const btn = e.target.closest('.view-detail'); if(btn) showReceipt(btn.dataset.id); });
+            
+            document.getElementById('receiptContent').addEventListener('click',e=>{
+                const txId = e.target.dataset.id;
+                if(e.target.id==='btnAddPayment'){
+                    const amount = parseFloat(document.getElementById('payAmount').value)||0; const kasTujuan = document.getElementById('payKas').value;
+                    const tx = transactions.find(t=>t.id===txId); if(tx && amount>0){
+                        tx.amountPaid += amount; tx.remainingBalance -= amount; tx.paymentHistory.push({date: new Date().toISOString(), amount, kas: kasTujuan});
+                        if(tx.remainingBalance<=0){ tx.paymentStatus='Lunas'; tx.remainingBalance=0; } else tx.paymentStatus='Belum Lunas';
+                        kas[kasTujuan] = (kas[kasTujuan] || 0) + amount;
+                        saveAll(); fullRender(); showReceipt(txId);
+                    }
+                }else if(e.target.id==='btnMarkLunas'){
+                    const tx = transactions.find(t=>t.id===txId); if(tx){ tx.paymentStatus='Lunas'; tx.amountPaid=tx.totalAmount; tx.remainingBalance=0; saveAll(); fullRender(); receiptModal.hide(); }
+                }
+            });
+            document.getElementById('shareImageBtn').addEventListener('click',()=>{ if(currentTxId) shareReceiptImage(currentTxId); });
+            document.getElementById('downloadImageBtn').addEventListener('click',()=>{ if(currentTxId) downloadReceiptImage(currentTxId); });
+
+            document.getElementById('settingsForm').addEventListener('submit',e=>{ e.preventDefault();
+                settings.storeName = document.getElementById('settingStoreName').value;
+                settings.storeContact = document.getElementById('settingStoreContact').value;
+                settings.receiptMessage = document.getElementById('settingReceiptMsg').value;
+                saveAll(); renderSettings();
+            });
+            document.getElementById('darkModeToggle').addEventListener('change',e=>{ settings.darkMode = e.target.checked; saveAll(); applyTheme(); });
+            document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+            document.getElementById('exportPdfBtn').addEventListener('click', exportToPDF);
+            document.getElementById('resetDataBtn').addEventListener('click',()=>{ if(confirm('Reset semua data? Data akan hilang permanen.')){ localStorage.clear(); location.reload(); } });
+            
+            document.getElementById('manageKasBtn').addEventListener('click', ()=>{
+                renderKasTypeList();
+                manageKasModal.show();
+            });
+            
+            function renderKasTypeList(){
+                const container = document.getElementById('kasTypeList');
+                container.innerHTML = kasTypes.map(t => {
+                    const isDefault = t === 'Tunai' || t === 'Bank' || t === 'E-Wallet';
+                    return `<div class="kas-item"><span><i class="bi ${getKasIcon(t)} me-2"></i>${t} ${isDefault?'<small class="text-muted">(default)</small>':''}</span>${!isDefault?`<button class="btn btn-sm btn-outline-danger delete-kas-type" data-name="${t}"><i class="bi bi-trash"></i></button>`:'<span class="text-muted">—</span>'}</div>`;
+                }).join('');
+                
+                document.querySelectorAll('.delete-kas-type').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const name = btn.dataset.name;
+                        if (confirm(`Hapus jenis kas "${name}"? Saldo kas ini akan hilang.`)) {
+                            kasTypes = kasTypes.filter(t => t !== name);
+                            delete kas[name];
+                            saveAll();
+                            fullRender();
+                            renderKasTypeList();
+                        }
+                    });
+                });
+            }
+            
+            document.getElementById('addKasTypeBtn').addEventListener('click', ()=>{
+                const input = document.getElementById('newKasName');
+                const name = input.value.trim();
+                if (!name) { alert('Masukkan nama kas'); return; }
+                if (kasTypes.includes(name)) { alert('Jenis kas sudah ada'); return; }
+                kasTypes.push(name);
+                kas[name] = 0;
+                saveAll();
+                fullRender();
+                renderKasTypeList();
+                input.value = '';
+            });
+
+            document.getElementById('btn-edit-saldo').addEventListener('click',()=>{
+                const container = document.getElementById('kasInputsContainer');
+                container.innerHTML = kasTypes.map(t => `
+                    <div class="mb-3">
+                        <label class="form-label"><i class="bi ${getKasIcon(t)} me-1"></i>Kas ${t}</label>
+                        <input type="number" id="inputKas_${t.replace(/\s/g,'')}" class="form-control" value="${kas[t] || 0}">
+                    </div>
+                `).join('');
+                kasModal.show();
+            });
+            document.getElementById('kasForm').addEventListener('submit',e=>{
+                e.preventDefault();
+                kasTypes.forEach(t => {
+                    const input = document.getElementById(`inputKas_${t.replace(/\s/g,'')}`);
+                    if (input) kas[t] = parseFloat(input.value) || 0;
+                });
+                saveAll(); 
+                renderKasCards();
+                kasModal.hide();
+            });
+        });
+    })();
+</script>
+</body>
+</html>
