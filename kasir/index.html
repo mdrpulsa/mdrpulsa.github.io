@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover" />
   <title>Kasir MDR Pulsa</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <!-- html2canvas untuk download struk -->
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Inter',sans-serif; background:#f4f6f9; color:#1e293b; display:flex; flex-direction:column; min-height:100vh; }
@@ -39,6 +41,26 @@
     .flex-between { display:flex; justify-content:space-between; align-items:center; }
     .transaction-item { background:#f8fafc; border-radius:10px; padding:0.8rem; margin-bottom:0.8rem; border-left:4px solid #008ca7; }
     .error-text { color:#dc2626; font-size:0.9rem; display:none; }
+
+    /* Modal Styling */
+    .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center; }
+    .modal.active { display:flex; }
+    .modal-content { background:white; border-radius:12px; padding:1rem; max-width:400px; width:90%; max-height:90vh; overflow-y:auto; }
+    .modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; }
+    .modal-header h3 { margin:0; }
+    .modal-close { background:none; border:none; font-size:1.4rem; cursor:pointer; }
+
+    /* Struk Thermal */
+    .struk-wrapper { display:flex; justify-content:center; }
+    .struk { width:320px; background:white; padding:16px 12px; font-family:'Courier New', monospace; font-size:14px; color:#000; line-height:1.4; border:1px dashed #ccc; margin:0 auto; }
+    .struk .center { text-align:center; }
+    .struk .right { text-align:right; }
+    .struk .bold { font-weight:bold; }
+    .struk .divider { border-top:1px dashed #000; margin:8px 0; }
+    .struk hr { border:none; border-top:1px solid #000; margin:6px 0; }
+    .struk .item-row { display:flex; justify-content:space-between; }
+    .struk .item-desc { flex:1; }
+    .struk .footer { margin-top:10px; font-style:italic; text-align:center; }
   </style>
 </head>
 <body>
@@ -122,198 +144,428 @@
       <div class="card"><h3>Profil Toko</h3><div class="input-group"><label>Nama Toko</label><input type="text" id="tokoNama" /></div><div class="input-group"><label>Alamat</label><input type="text" id="tokoAlamat" /></div><button class="btn" id="btnSimpanProfil">Simpan</button></div>
     </section>
   </main>
+
+  <!-- Modal Struk -->
+  <div class="modal" id="modalStruk">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Struk Transaksi</h3>
+        <button class="modal-close" id="closeStrukModal">✕</button>
+      </div>
+      <div class="struk-wrapper" id="strukContainer"></div>
+      <button class="btn" id="btnDownloadStruk" style="margin-top:1rem;">📥 Download PNG</button>
+    </div>
+  </div>
+
   <script>
-    // ==================== KONFIGURASI WAJIB DIISI ====================
+    // ==================== KONFIGURASI ====================
     const API_MASTER_URL = 'https://script.google.com/macros/s/AKfycbxeGpMh9erWFfxbPr-nwH6Sh3wEtXlTYBWQFKNedHDL7WSJPBXJKX2osTVtOh9n7FdVHg/exec';
     const API_WORKER_URL = 'https://script.google.com/macros/s/AKfycbwxNvVdkEIIwSjik3CFfQY-__k-W6FrWN3DIxslm9VShDc6Elt1lT7K2s-_0GkG-4FOOQ/exec';
-    const SHARE_EMAIL = 'yokobae89@gmail.com'; // GANTI dengan email pemilik script
-    const TEMPLATE_LINK = 'https://docs.google.com/spreadsheets/d/1m790mGYGAKIVEUmWT7OUB1lz1OcNPY-TfAV0BuiYnRE/copy'; // GANTI TEMPLATE_ID
+    const SHARE_EMAIL = 'yokobae89@gmail.com'; // ⚠️ Ganti
+    const TEMPLATE_LINK = 'https://docs.google.com/spreadsheets/d/1m790mGYGAKIVEUmWT7OUB1lz1OcNPY-TfAV0BuiYnRE/copy'; // ⚠️ Ganti
 
     document.getElementById('shareEmail').textContent = SHARE_EMAIL;
     document.getElementById('templateLink').href = TEMPLATE_LINK;
 
     let userLogin = JSON.parse(sessionStorage.getItem('kasir_user')) || null;
     let keranjang = [];
-
-    // Cache lokal sementara (fallback)
     let produk = [], pelanggan = [], riwayat = [];
 
     const $ = id => document.getElementById(id);
     const pages = document.querySelectorAll('.page');
-    let currentPage = 'login';
 
     function tampilkanHalaman(pageId) {
+      console.log('tampilkanHalaman:', pageId, 'userLogin:', userLogin);
       if (!userLogin && pageId !== 'login') pageId = 'login';
       pages.forEach(p => p.classList.remove('active'));
-      $(`page-${pageId}`).classList.add('active');
-      $('headerTitle').textContent = {login:'Login',setup:'Setup',transaksi:'Transaksi',produk:'Produk',pelanggan:'Pelanggan',riwayat:'Riwayat',profil:'Profil'}[pageId]||'';
-      $('btnLogout').style.display = (userLogin && pageId!=='login') ? 'inline-block' : 'none';
-      currentPage = pageId;
-      if (pageId==='transaksi') { renderKeranjang(); updateSelect(); }
+      const target = document.getElementById('page-' + pageId);
+      if (target) target.classList.add('active');
+      document.getElementById('headerTitle').textContent = {
+        login:'Login', setup:'Setup', transaksi:'Transaksi', produk:'Produk', pelanggan:'Pelanggan', riwayat:'Riwayat', profil:'Profil'
+      }[pageId] || '';
+      document.getElementById('btnLogout').style.display = (userLogin && pageId !== 'login') ? 'inline-block' : 'none';
+      if (pageId === 'transaksi') { renderKeranjang(); updateSelect(); }
     }
 
-    // Login
-    $('btnLogin').onclick = async () => {
-      const nohp = $('loginNohp').value.trim();
-      const pin = $('loginPin').value.trim();
-      $('loginError').style.display = 'none';
-      if(!nohp||!pin) return;
-      $('btnLogin').disabled = true;
-      const res = await fetch(`${API_MASTER_URL}?action=login&nohp=${nohp}&pin=${pin}`);
-      const json = await res.json();
-      $('btnLogin').disabled = false;
-      if(json.status==='ok'){
-        userLogin = json.data;
-        sessionStorage.setItem('kasir_user', JSON.stringify(userLogin));
-        updateUIProfil();
-        if(!userLogin.spreadsheetId) tampilkanHalaman('setup');
-        else { loadDataDariSpreadsheet(); tampilkanHalaman('transaksi'); }
-      } else { $('loginError').textContent = json.message; $('loginError').style.display='block'; }
+    // ---------- LOGIN ----------
+    document.getElementById('btnLogin').onclick = async () => {
+      const nohpInput = document.getElementById('loginNohp').value.trim();
+      const pin = document.getElementById('loginPin').value.trim();
+      const errorEl = document.getElementById('loginError');
+      errorEl.style.display = 'none';
+      if (!nohpInput || !pin) {
+        errorEl.textContent = 'No HP dan PIN wajib diisi';
+        errorEl.style.display = 'block';
+        return;
+      }
+      const btn = document.getElementById('btnLogin');
+      btn.disabled = true;
+      btn.textContent = 'Memeriksa...';
+      try {
+        const url = `${API_MASTER_URL}?action=login&nohp=${encodeURIComponent(nohpInput)}&pin=${encodeURIComponent(pin)}`;
+        console.log('Login fetch:', url);
+        const res = await fetch(url);
+        const json = await res.json();
+        console.log('Login response:', json);
+        if (json.status === 'ok') {
+          userLogin = json.data;
+          if (!userLogin.nohp) {
+            userLogin.nohp = nohpInput;
+          }
+          sessionStorage.setItem('kasir_user', JSON.stringify(userLogin));
+          updateUIProfil();
+          if (!userLogin.spreadsheetId) {
+            tampilkanHalaman('setup');
+          } else {
+            await loadDataDariSpreadsheet();
+            tampilkanHalaman('transaksi');
+          }
+        } else {
+          errorEl.textContent = json.message || 'Login gagal';
+          errorEl.style.display = 'block';
+        }
+      } catch (e) {
+        console.error('Login error:', e);
+        errorEl.textContent = 'Gagal terhubung ke server';
+        errorEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Masuk';
+      }
     };
 
-    // Setup Spreadsheet
-    $('btnSetupSimpan').onclick = async () => {
-      const id = $('setupSpreadsheetId').value.trim();
-      if(!id) return;
-      const res = await fetch(`${API_MASTER_URL}?action=updateSpreadsheetId&nohp=${userLogin.email ? userLogin.nohp : ''}&id=${id}`);
-      const json = await res.json();
-      if(json.status==='ok'){
-        userLogin.spreadsheetId = id;
-        sessionStorage.setItem('kasir_user', JSON.stringify(userLogin));
-        alert('Spreadsheet berhasil dikaitkan!');
-        loadDataDariSpreadsheet();
-        tampilkanHalaman('transaksi');
-      } else { alert('Gagal: '+json.message); }
+    // ---------- SETUP SPREADSHEET ----------
+    document.getElementById('btnSetupSimpan').onclick = async () => {
+      const id = document.getElementById('setupSpreadsheetId').value.trim();
+      if (!id) return;
+      const session = JSON.parse(sessionStorage.getItem('kasir_user'));
+      const nohp = session?.nohp || userLogin?.nohp;
+      if (!nohp) {
+        alert('Session tidak lengkap. Silakan logout dan login ulang.');
+        return;
+      }
+      try {
+        const url = `${API_MASTER_URL}?action=updateSpreadsheetId&nohp=${encodeURIComponent(nohp)}&id=${encodeURIComponent(id)}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        if (json.status === 'ok') {
+          userLogin.spreadsheetId = id;
+          userLogin.nohp = nohp;
+          sessionStorage.setItem('kasir_user', JSON.stringify(userLogin));
+          alert('Spreadsheet berhasil dikaitkan!');
+          await loadDataDariSpreadsheet();
+          tampilkanHalaman('transaksi');
+        } else {
+          alert('Gagal: ' + (json.message || 'Error tidak diketahui'));
+        }
+      } catch (e) {
+        alert('Gagal menyimpan, cek koneksi.');
+      }
     };
 
-    // Logout
-    $('btnLogout').onclick = () => { sessionStorage.removeItem('kasir_user'); userLogin=null; tampilkanHalaman('login'); }
+    // ---------- LOGOUT ----------
+    document.getElementById('btnLogout').onclick = () => {
+      if (confirm('Yakin ingin keluar?')) {
+        sessionStorage.removeItem('kasir_user');
+        userLogin = null;
+        keranjang = [];
+        produk = []; pelanggan = []; riwayat = [];
+        tampilkanHalaman('login');
+      }
+    };
 
-    // Menu
-    document.querySelectorAll('.nav-link').forEach(btn => btn.onclick = () => { tampilkanHalaman(btn.dataset.page); sidebar.classList.remove('active'); });
-    $('menuToggle').onclick = () => { if(userLogin){ sidebar.classList.add('active'); overlay.classList.add('active'); } };
-    $('closeSidebar').onclick = () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); };
-    $('sidebarOverlay').onclick = () => { sidebar.classList.remove('active'); overlay.classList.remove('active'); };
+    // ---------- SIDEBAR ----------
+    document.querySelectorAll('.nav-link').forEach(btn => {
+      btn.addEventListener('click', function() {
+        tampilkanHalaman(this.dataset.page);
+        document.getElementById('sidebar').classList.remove('active');
+        document.getElementById('sidebarOverlay').classList.remove('active');
+      });
+    });
+    document.getElementById('menuToggle').onclick = () => {
+      if (!userLogin) return;
+      document.getElementById('sidebar').classList.add('active');
+      document.getElementById('sidebarOverlay').classList.add('active');
+    };
+    document.getElementById('closeSidebar').onclick = () => {
+      document.getElementById('sidebar').classList.remove('active');
+      document.getElementById('sidebarOverlay').classList.remove('active');
+    };
+    document.getElementById('sidebarOverlay').onclick = () => {
+      document.getElementById('sidebar').classList.remove('active');
+      document.getElementById('sidebarOverlay').classList.remove('active');
+    };
 
-    function updateUIProfil(){
-      if(userLogin){
-        $('avatarInitial').textContent = userLogin.nama.charAt(0).toUpperCase();
-        $('sidebarShopName').textContent = userLogin.nama;
-        $('sidebarEmail').textContent = userLogin.email||'';
+    function updateUIProfil() {
+      if (userLogin) {
+        document.getElementById('avatarInitial').textContent = (userLogin.nama || 'M').charAt(0).toUpperCase();
+        document.getElementById('sidebarShopName').textContent = userLogin.nama || 'MDR Pulsa';
+        document.getElementById('sidebarEmail').textContent = userLogin.email || '';
       }
     }
 
-    // ==================== DATA ====================
+    // ==================== DATA DARI SPREADSHEET ====================
     async function loadDataDariSpreadsheet() {
-      if(!userLogin || !userLogin.spreadsheetId) return;
-      try {
-        const res = await fetch(`${API_WORKER_URL}`, {
-          method: 'POST',
-          body: JSON.stringify({action:'getAll', userId: userLogin.nohp || userLogin.email})
-        });
-        const json = await res.json();
-        if(json.status==='ok'){
-          produk = json.data.produk||[];
-          pelanggan = json.data.pelanggan||[];
-          riwayat = json.data.transaksi||[];
-          renderSemua();
-        }
-      } catch(e){ console.error(e); }
-    }
-
-    async function simpanKeSpreadsheet(action, payload){
-      if(!userLogin.spreadsheetId) return false;
+      if (!userLogin || !userLogin.spreadsheetId) return;
       try {
         const res = await fetch(API_WORKER_URL, {
-          method:'POST',
-          body: JSON.stringify({action, userId: userLogin.nohp || userLogin.email, payload})
+          method: 'POST',
+          body: JSON.stringify({ action: 'getAll', userId: userLogin.nohp })
         });
-        return (await res.json()).status==='ok';
-      } catch(e){ alert('Gagal menyimpan ke spreadsheet'); return false; }
+        const json = await res.json();
+        if (json.status === 'ok') {
+          produk = json.data.produk || [];
+          pelanggan = json.data.pelanggan || [];
+          riwayat = json.data.transaksi || [];
+          renderSemua();
+        } else {
+          console.error('getAll gagal:', json.message);
+        }
+      } catch (e) {
+        console.error('Gagal memuat data:', e);
+      }
     }
 
-    // Produk
-    $('btnSimpanProduk').onclick = async () => {
-      const nama = $('prodNama').value.trim();
-      const harga = parseInt($('prodHarga').value);
-      if(!nama||isNaN(harga)) return;
-      const ok = await simpanKeSpreadsheet('simpanProduk',{nama,harga});
-      if(ok) { produk.push({nama,harga}); renderTabelProduk(); $('prodNama').value=''; $('prodHarga').value=''; }
-    };
-    function renderTabelProduk(){
-      $('tabelProduk').innerHTML = produk.map(p => `<tr><td>${p.nama}</td><td>Rp ${p.harga}</td></tr>`).join('');
+    async function simpanKeSpreadsheet(action, payload) {
+      if (!userLogin || !userLogin.spreadsheetId) return false;
+      try {
+        const res = await fetch(API_WORKER_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action, userId: userLogin.nohp, payload })
+        });
+        const json = await res.json();
+        if (json.status !== 'ok') {
+          alert('Gagal menyimpan: ' + (json.message || 'Error'));
+        }
+        return json.status === 'ok';
+      } catch (e) {
+        alert('Gagal menyimpan ke spreadsheet. Cek koneksi.');
+        return false;
+      }
     }
 
-    // Pelanggan
-    $('btnSimpanPelanggan').onclick = async () => {
-      const nama = $('pelNama').value.trim();
-      const hp = $('pelHp').value.trim();
-      if(!nama) return;
-      const ok = await simpanKeSpreadsheet('simpanPelanggan',{nama,hp});
-      if(ok) { pelanggan.push({nama,hp}); renderListPelanggan(); $('pelNama').value=''; $('pelHp').value=''; }
-    };
-    function renderListPelanggan(){
-      $('listPelanggan').innerHTML = pelanggan.map(p => `<div class="flex-between"><div><strong>${p.nama}</strong><br><small>${p.hp||'-'}</small></div></div>`).join('');
-    }
-
-    // Transaksi
-    function updateSelect(){
-      const produkEl = $('trxProduk');
-      produkEl.innerHTML = '<option value="">-- Pilih Produk --</option>'+produk.map((p,i) => `<option value="${i}" data-harga="${p.harga}">${p.nama} - Rp${p.harga}</option>`).join('');
-      $('trxPelanggan').innerHTML = '<option value="">-- Umum --</option>'+pelanggan.map((p,i) => `<option value="${i}">${p.nama}</option>`).join('');
-    }
-    $('trxProduk').onchange = function(){ const opt = this.options[this.selectedIndex]; $('trxHarga').value = opt?.dataset?.harga || ''; };
-    $('btnTambahItem').onclick = () => {
-      const idx = $('trxProduk').value;
-      if(idx==='') return alert('Pilih produk');
-      const harga = parseInt($('trxHarga').value);
-      const jumlah = parseInt($('trxJumlah').value)||1;
-      keranjang.push({produk: produk[idx].nama, harga, jumlah});
-      renderKeranjang();
-    };
-    function renderKeranjang(){
-      if(keranjang.length===0){ $('keranjangContainer').innerHTML='<p>Belum ada item.</p>'; $('totalBayar').textContent='Rp 0'; return; }
-      let html='', total=0;
-      keranjang.forEach((item,i) => {
-        const sub = item.harga*item.jumlah; total+=sub;
-        html += `<div class="transaction-item flex-between"><div><strong>${item.produk}</strong><br><small>${item.jumlah}x Rp${item.harga}</small></div><div>Rp${sub} <button class="btn-sm btn-outline" data-idx="${i}">🗑</button></div></div>`;
-      });
-      $('keranjangContainer').innerHTML = html;
-      $('totalBayar').textContent = 'Rp '+total;
-      document.querySelectorAll('[data-idx]').forEach(b => b.onclick=function(){ keranjang.splice(parseInt(this.dataset.idx),1); renderKeranjang(); });
-    }
-    $('btnBayar').onclick = async () => {
-      if(keranjang.length===0) return;
-      const pelIndex = $('trxPelanggan').value;
-      const namaPel = pelIndex!=='' ? pelanggan[pelIndex].nama : 'Umum';
-      const total = keranjang.reduce((s,i)=>s+(i.harga*i.jumlah),0);
-      const waktu = new Date().toLocaleString('id-ID');
-      const transaksi = {pelanggan:namaPel, items: keranjang, total, waktu};
-      const ok = await simpanKeSpreadsheet('simpanTransaksi', transaksi);
-      if(ok){
-        riwayat.push(transaksi);
-        keranjang=[]; renderKeranjang(); renderRiwayat();
-        alert('Transaksi tersimpan');
+    // ==================== PRODUK ====================
+    document.getElementById('btnSimpanProduk').onclick = async () => {
+      const nama = document.getElementById('prodNama').value.trim();
+      const harga = parseInt(document.getElementById('prodHarga').value);
+      if (!nama || isNaN(harga) || harga <= 0) return alert('Data produk tidak valid.');
+      const ok = await simpanKeSpreadsheet('simpanProduk', { nama, harga });
+      if (ok) {
+        produk.push({ nama, harga });
+        renderTabelProduk();
+        updateSelect();
+        document.getElementById('prodNama').value = '';
+        document.getElementById('prodHarga').value = '';
       }
     };
-    function renderRiwayat(){
-      if(riwayat.length===0){ $('riwayatContainer').innerHTML='<p>Belum ada transaksi.</p>'; return; }
-      let html = '';
-      [...riwayat].reverse().forEach(trx => {
-        html += `<div class="transaction-item"><div class="flex-between"><strong>${trx.pelanggan}</strong><span class="badge">${trx.waktu}</span></div>`;
-        trx.items.forEach(item => html += `<div>• ${item.produk} (${item.jumlah}x Rp${item.harga})</div>`);
-        html += `<strong>Total: Rp ${trx.total}</strong></div>`;
-      });
-      $('riwayatContainer').innerHTML = html;
+    function renderTabelProduk() {
+      const tbody = document.getElementById('tabelProduk');
+      tbody.innerHTML = produk.length === 0
+        ? '<tr><td colspan="2">Belum ada produk</td></tr>'
+        : produk.map(p => `<tr><td>${p.nama}</td><td>Rp ${p.harga.toLocaleString('id-ID')}</td></tr>`).join('');
     }
-    function renderSemua(){ renderTabelProduk(); renderListPelanggan(); renderRiwayat(); updateSelect(); }
 
-    // Inisiasi
+    // ==================== PELANGGAN ====================
+    document.getElementById('btnSimpanPelanggan').onclick = async () => {
+      const nama = document.getElementById('pelNama').value.trim();
+      const hp = document.getElementById('pelHp').value.trim();
+      if (!nama) return alert('Nama wajib diisi.');
+      const ok = await simpanKeSpreadsheet('simpanPelanggan', { nama, hp });
+      if (ok) {
+        pelanggan.push({ nama, hp });
+        renderListPelanggan();
+        updateSelect();
+        document.getElementById('pelNama').value = '';
+        document.getElementById('pelHp').value = '';
+      }
+    };
+    function renderListPelanggan() {
+      const el = document.getElementById('listPelanggan');
+      el.innerHTML = pelanggan.length === 0
+        ? '<p>Belum ada pelanggan.</p>'
+        : pelanggan.map(p => `<div class="flex-between"><div><strong>${p.nama}</strong><br><small>${p.hp || '-'}</small></div></div>`).join('');
+    }
+
+    // ==================== TRANSAKSI ====================
+    function updateSelect() {
+      const produkEl = document.getElementById('trxProduk');
+      produkEl.innerHTML = '<option value="">-- Pilih Produk --</option>' +
+        produk.map((p, i) => `<option value="${i}" data-harga="${p.harga}">${p.nama} - Rp${p.harga.toLocaleString('id-ID')}</option>`).join('');
+      const pelEl = document.getElementById('trxPelanggan');
+      pelEl.innerHTML = '<option value="">-- Umum --</option>' +
+        pelanggan.map((p, i) => `<option value="${i}">${p.nama}</option>`).join('');
+    }
+    document.getElementById('trxProduk').onchange = function() {
+      const opt = this.options[this.selectedIndex];
+      document.getElementById('trxHarga').value = opt?.dataset?.harga || '';
+    };
+    document.getElementById('btnTambahItem').onclick = () => {
+      const idx = document.getElementById('trxProduk').value;
+      if (idx === '') return alert('Pilih produk dulu.');
+      const harga = parseInt(document.getElementById('trxHarga').value);
+      const jumlah = parseInt(document.getElementById('trxJumlah').value) || 1;
+      if (isNaN(harga) || harga <= 0) return alert('Harga tidak valid.');
+      keranjang.push({ produk: produk[idx].nama, harga, jumlah });
+      renderKeranjang();
+    };
+    function renderKeranjang() {
+      const container = document.getElementById('keranjangContainer');
+      const totalEl = document.getElementById('totalBayar');
+      if (keranjang.length === 0) {
+        container.innerHTML = '<p>Belum ada item.</p>';
+        totalEl.textContent = 'Rp 0';
+        return;
+      }
+      let total = 0;
+      let html = '';
+      keranjang.forEach((item, i) => {
+        const sub = item.harga * item.jumlah;
+        total += sub;
+        html += `<div class="transaction-item flex-between">
+          <div><strong>${item.produk}</strong><br><small>${item.jumlah}x Rp${item.harga.toLocaleString('id-ID')}</small></div>
+          <div>Rp${sub.toLocaleString('id-ID')} <button class="btn-sm btn-outline" data-idx="${i}">🗑</button></div>
+        </div>`;
+      });
+      container.innerHTML = html;
+      totalEl.textContent = 'Rp ' + total.toLocaleString('id-ID');
+      document.querySelectorAll('[data-idx]').forEach(btn => {
+        btn.onclick = function() {
+          keranjang.splice(parseInt(this.dataset.idx), 1);
+          renderKeranjang();
+        };
+      });
+    }
+    document.getElementById('btnBayar').onclick = async () => {
+      if (keranjang.length === 0) return alert('Keranjang kosong.');
+      const pelIndex = document.getElementById('trxPelanggan').value;
+      const namaPelanggan = pelIndex !== '' ? pelanggan[pelIndex].nama : 'Umum';
+      const total = keranjang.reduce((s, i) => s + (i.harga * i.jumlah), 0);
+      const waktu = new Date().toLocaleString('id-ID');
+      const nomorTrx = 'TRX-' + Date.now().toString(36).toUpperCase();
+      const transaksi = { pelanggan: namaPelanggan, items: [...keranjang], total, waktu, nomorTrx };
+      const ok = await simpanKeSpreadsheet('simpanTransaksi', transaksi);
+      if (ok) {
+        riwayat.push(transaksi);
+        keranjang = [];
+        renderKeranjang();
+        renderRiwayat();
+        alert('Transaksi berhasil!');
+      }
+    };
+
+    // ==================== RIWAYAT + STRUK ====================
+    function renderRiwayat() {
+      const container = document.getElementById('riwayatContainer');
+      if (riwayat.length === 0) {
+        container.innerHTML = '<p>Belum ada transaksi.</p>';
+        return;
+      }
+      let html = '';
+      [...riwayat].reverse().forEach((trx, index) => {
+        const originalIndex = riwayat.length - 1 - index; // index asli di array
+        html += `<div class="transaction-item">
+          <div class="flex-between"><strong>${trx.pelanggan}</strong><span class="badge">${trx.waktu}</span></div>
+          <div style="margin:0.3rem 0;">`;
+        trx.items.forEach(item => {
+          html += `<div>• ${item.produk} (${item.jumlah}x Rp${item.harga.toLocaleString('id-ID')})</div>`;
+        });
+        html += `</div><strong>Total: Rp ${trx.total.toLocaleString('id-ID')}</strong>
+          <div style="margin-top:0.5rem;"><button class="btn-sm btn-outline lihat-struk" data-index="${originalIndex}">🧾 Lihat Struk</button></div>
+        </div>`;
+      });
+      container.innerHTML = html;
+
+      // Event listener untuk tombol Lihat Struk
+      document.querySelectorAll('.lihat-struk').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const idx = parseInt(this.dataset.index);
+          tampilkanStruk(idx);
+        });
+      });
+    }
+
+    function generateStrukHTML(trx) {
+      const toko = userLogin?.nama || 'MDR Pulsa';
+      const alamat = ''; // bisa dari profil jika ada
+      const garis = '='.repeat(32);
+      const garisPutus = '-'.repeat(32);
+      let html = `<div class="struk">
+        <div class="center bold">${toko.toUpperCase()}</div>`;
+      if (alamat) html += `<div class="center">${alamat}</div>`;
+      html += `<div class="center">${garis}</div>
+        <div>No: ${trx.nomorTrx || '-'}</div>
+        <div>Tgl : ${trx.waktu}</div>
+        <div>Pelanggan: ${trx.pelanggan}</div>
+        <div>${garisPutus}</div>`;
+
+      trx.items.forEach(item => {
+        const sub = item.harga * item.jumlah;
+        html += `<div class="item-row"><span class="item-desc">${item.produk} (${item.jumlah}x ${item.harga.toLocaleString('id-ID')})</span><span>${sub.toLocaleString('id-ID')}</span></div>`;
+      });
+
+      html += `<div>${garisPutus}</div>
+        <div class="right bold">Total: Rp ${trx.total.toLocaleString('id-ID')}</div>
+        <div>${garis}</div>
+        <div class="center">Terima kasih</div>
+        <div class="footer">Barang yang sudah dibeli tidak dapat dikembalikan / ditukar. Komplain hanya dilayani dengan struk ini.</div>
+      </div>`;
+      return html;
+    }
+
+    function tampilkanStruk(index) {
+      const trx = riwayat[index];
+      if (!trx) return;
+      const strukHTML = generateStrukHTML(trx);
+      document.getElementById('strukContainer').innerHTML = strukHTML;
+      document.getElementById('modalStruk').classList.add('active');
+      // Simpan index yang sedang ditampilkan untuk download
+      document.getElementById('modalStruk').dataset.index = index;
+    }
+
+    document.getElementById('closeStrukModal').onclick = () => {
+      document.getElementById('modalStruk').classList.remove('active');
+    };
+    window.onclick = (e) => {
+      if (e.target === document.getElementById('modalStruk')) {
+        document.getElementById('modalStruk').classList.remove('active');
+      }
+    };
+
+    document.getElementById('btnDownloadStruk').onclick = function() {
+      const strukEl = document.querySelector('.struk');
+      if (!strukEl) return;
+      html2canvas(strukEl, {
+        scale: 2,
+        backgroundColor: '#ffffff'
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'struk_' + new Date().toISOString().slice(0,10) + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      }).catch(err => {
+        alert('Gagal mengunduh struk.');
+        console.error(err);
+      });
+    };
+
+    function renderSemua() {
+      renderTabelProduk();
+      renderListPelanggan();
+      renderRiwayat();
+      updateSelect();
+    }
+
+    // ==================== INISIALISASI ====================
     updateUIProfil();
-    if(userLogin){
-      if(!userLogin.spreadsheetId) tampilkanHalaman('setup');
-      else { loadDataDariSpreadsheet(); tampilkanHalaman('transaksi'); }
-    } else tampilkanHalaman('login');
+    if (userLogin) {
+      if (!userLogin.spreadsheetId) {
+        tampilkanHalaman('setup');
+      } else {
+        loadDataDariSpreadsheet().then(() => tampilkanHalaman('transaksi'));
+      }
+    } else {
+      tampilkanHalaman('login');
+    }
   </script>
 </body>
 </html>
